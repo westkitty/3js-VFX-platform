@@ -10,7 +10,8 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "check:runtime-spine": "tsx scripts/runtime-spine-check.ts",
-    "check:source-graph": "node scripts/source-graph-check.cjs"
+    "check:source-graph": "node scripts/source-graph-check.cjs",
+    "check:indicator-model": "node scripts/indicator-model-check.cjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
