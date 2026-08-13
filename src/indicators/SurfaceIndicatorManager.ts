@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 import { SurfaceHit, TargetingShape } from '../types';
 import { SurfaceQuery } from '../core/SurfaceQuery';
+import {
+  advanceIndicatorPhase,
+  buildIndicatorLocalOutline,
+  createIndicatorPhaseState,
+  type IndicatorPhaseState,
+} from './IndicatorModel';
 
 export interface SurfaceIndicatorConfig {
   shape: Exclude<TargetingShape, 'path'>;
@@ -13,14 +19,10 @@ export interface SurfaceIndicatorConfig {
   commitDuration: number;
 }
 
-type IndicatorPhase = 'warning' | 'commit' | 'clear';
-
 class SurfaceIndicator {
   private readonly line: THREE.LineLoop;
   private readonly material: THREE.LineBasicMaterial;
-  private elapsed = 0;
-  private phase: IndicatorPhase = 'warning';
-  private clearElapsed = 0;
+  private phaseState: IndicatorPhaseState = createIndicatorPhaseState();
 
   constructor(private readonly scene: THREE.Scene, query: SurfaceQuery, hit: SurfaceHit, config: SurfaceIndicatorConfig) {
     const points = buildProjectedOutline(query, hit, config);
@@ -32,22 +34,11 @@ class SurfaceIndicator {
   }
 
   public update(dt: number, config: SurfaceIndicatorConfig): boolean {
-    const safeDt = Math.max(0, dt);
-    this.elapsed += safeDt;
-    if (this.phase === 'warning' && this.elapsed >= Math.max(0, config.warningDuration)) {
-      this.phase = 'commit';
-      this.elapsed = 0;
-      this.material.color.set(0x22d3ee);
-      this.material.opacity = 1;
-    } else if (this.phase === 'commit' && this.elapsed >= Math.max(0, config.commitDuration)) {
-      this.phase = 'clear';
-      this.clearElapsed = 0;
-    } else if (this.phase === 'clear') {
-      this.clearElapsed += safeDt;
-      this.material.opacity = Math.max(0, 1 - this.clearElapsed / 0.2);
-      if (this.clearElapsed >= 0.2) return true;
-    }
-    return false;
+    const next = advanceIndicatorPhase(this.phaseState, dt, config.warningDuration, config.commitDuration);
+    this.phaseState = next.state;
+    if (next.enteredCommit) this.material.color.set(0x22d3ee);
+    this.material.opacity = next.opacity;
+    return next.finished;
   }
 
   public destroy() {
@@ -76,7 +67,11 @@ export class SurfaceIndicatorManager {
     }
   }
 
-  public clear(): void { this.active.forEach(({ indicator }) => indicator.destroy()); this.active = []; }
+  public clear(): void {
+    this.active.forEach(({ indicator }) => indicator.destroy());
+    this.active = [];
+  }
+
   public getActiveCount(): number { return this.active.length; }
 }
 
@@ -85,30 +80,12 @@ function buildProjectedOutline(query: SurfaceQuery, hit: SurfaceHit, config: Sur
   const projectedDirection = config.direction.clone().addScaledVector(normal, -config.direction.dot(normal));
   const forward = projectedDirection.lengthSq() > 1e-10 ? projectedDirection.normalize() : hit.tangent.clone().normalize();
   const right = new THREE.Vector3().crossVectors(forward, normal).normalize();
-  const locals = buildLocalOutline(config);
+  const locals = buildIndicatorLocalOutline(config);
+
   return locals.map(([x, y]) => {
     const candidate = hit.point.clone().addScaledVector(right, x).addScaledVector(forward, y);
     const projected = query.projectNear(candidate, normal, Math.max(2, config.radius, config.width, config.range * 0.25));
     const resolved = projected ?? hit;
     return resolved.point.clone().addScaledVector(resolved.normal, 0.035);
   });
-}
-
-function buildLocalOutline(config: SurfaceIndicatorConfig): Array<[number, number]> {
-  const range = Math.max(0.1, config.range);
-  const radius = Math.max(0.1, config.radius);
-  const width = Math.max(0.05, config.width);
-  if (config.shape === 'zone' || config.shape === 'ring') {
-    const points: Array<[number, number]> = [];
-    for (let i = 0; i < 48; i++) { const a = (i / 48) * Math.PI * 2; points.push([Math.cos(a) * radius, Math.sin(a) * radius]); }
-    return points;
-  }
-  if (config.shape === 'cone') {
-    const half = Math.max(0.05, Math.min(Math.PI * 0.95, config.angle)) * 0.5;
-    const points: Array<[number, number]> = [[0, 0]];
-    for (let i = 0; i <= 32; i++) { const a = -half + (i / 32) * half * 2; points.push([Math.sin(a) * range, Math.cos(a) * range]); }
-    return points;
-  }
-  const halfWidth = width * 0.5;
-  return [[-halfWidth, 0], [-halfWidth, range], [halfWidth, range], [halfWidth, 0]];
 }
