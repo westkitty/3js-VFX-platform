@@ -1,18 +1,18 @@
 import * as THREE from 'three';
 import { AbilityModuleConfig } from '../../types';
-import { ParticleEmitter } from '../ParticleEmitter';
+import { VisualParticleField } from '../VisualParticleField';
 import { RuntimeVfxModule, VfxModuleFactoryContext, RandomSource, colorParam, numberParam } from './VfxRuntimeTypes';
 
 export class ParticleRuntimeModule implements RuntimeVfxModule {
   public readonly type = 'particles' as const;
-  private readonly emitter: ParticleEmitter;
+  private readonly emitter: VisualParticleField;
   private readonly scene: THREE.Scene;
   private readonly random: RandomSource;
   private params: AbilityModuleConfig['params'];
 
   constructor(config: AbilityModuleConfig, context: VfxModuleFactoryContext) {
     this.scene = context.scene;
-    this.emitter = new ParticleEmitter(context.scene, context.maxParticles);
+    this.emitter = new VisualParticleField(context.scene, context.maxParticles);
     this.random = context.random;
     this.params = { ...config.params };
     this.applyParams(config.params);
@@ -32,7 +32,7 @@ export class ParticleRuntimeModule implements RuntimeVfxModule {
   update(dt: number, time: number): void { this.emitter.update(dt, time); }
   triggerImpact(position: THREE.Vector3, time: number): void {
     const color = colorParam(this.params, 'color', 0xffaa00);
-    this.emitter.emitBurst(
+    this.emitter.addBurst(
       position,
       Math.max(0, Math.floor(numberParam(this.params, 'count', 150))),
       color.getHex(),
