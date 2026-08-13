@@ -50,10 +50,11 @@ function requireText(relativePath, needles) {
   }
 }
 
-requireText('src/core/SurfaceQuery.ts', ['projectAlong(', 'projectNear(']);
+requireText('src/core/SurfaceFrameModel.ts', ['buildSurfaceFrameTuple', 'buildDirectionalSurfaceFrameTuple', 'mapLocalSurfacePoint']);
+requireText('src/core/SurfaceQuery.ts', ['projectAlong(', 'projectNear(', 'buildSurfaceFrameTuple']);
 requireText('src/drawing/FreehandCaster.ts', ['SurfaceQuery', 'projectNear(']);
 requireText('src/indicators/IndicatorModel.ts', ['buildIndicatorLocalOutline', 'advanceIndicatorPhase']);
-requireText('src/indicators/SurfaceIndicatorManager.ts', ['class SurfaceIndicatorManager', 'projectNear(', 'advanceIndicatorPhase']);
+requireText('src/indicators/SurfaceIndicatorManager.ts', ['class SurfaceIndicatorManager', 'projectNear(', 'advanceIndicatorPhase', 'buildDirectionalSurfaceFrameTuple']);
 requireText('src/validation/SurfaceValidationFixture.ts', ['class SurfaceValidationFixture', 'SurfaceValidationRamp', 'SurfaceValidationStep']);
 requireText('src/App.tsx', ['SurfaceIndicatorManager', 'new FreehandCaster(engine.scene, engine.surfaceQuery)', 'indicatorMgr.update(dt)', 'surfaceFixture']);
 requireText('src/terrain/TerrainManager.ts', ['uMarkVariant']);
