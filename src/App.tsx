@@ -9,6 +9,7 @@ import { TerrainManager } from './terrain/TerrainManager';
 import { AbilityManager, type AbilityPreviewState } from './abilities/AbilityRuntime';
 import { FreehandCaster } from './drawing/FreehandCaster';
 import { SurfaceIndicatorManager, type SurfaceIndicatorConfig } from './indicators/SurfaceIndicatorManager';
+import { SurfaceValidationFixture } from './validation/SurfaceValidationFixture';
 import { globalAbilityRegistry } from './abilities/AbilityRegistry';
 import { SurfaceHit, AbilityDefinition, WorkbenchMode, SurfaceMutationType } from './types';
 
@@ -78,7 +79,13 @@ export default function App() {
     // 2. Terrain
     const terrain = new TerrainManager(engine.scene);
     terrainRef.current = terrain;
-    engine.surfaceQuery.setPlayableMeshes([terrain.getMesh()]);
+
+    const fixtureEnabled = new URLSearchParams(window.location.search).get('surfaceFixture') === '1';
+    const validationFixture = fixtureEnabled ? new SurfaceValidationFixture(engine.scene) : null;
+    engine.surfaceQuery.setPlayableMeshes([
+      terrain.getMesh(),
+      ...(validationFixture?.getPlayableMeshes() ?? []),
+    ]);
 
     // 3. Ability Manager
     const abilityMgr = new AbilityManager(engine.scene, terrain, engine.postFX);
@@ -122,6 +129,7 @@ export default function App() {
       abilityMgr.clearAll();
       freehandCaster.clear();
       indicatorMgr.clear();
+      validationFixture?.destroy();
       terrain.destroy();
       engine.destroy();
     };

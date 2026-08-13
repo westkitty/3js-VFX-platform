@@ -53,7 +53,9 @@ function requireText(relativePath, needles) {
 requireText('src/core/SurfaceQuery.ts', ['projectAlong(', 'projectNear(']);
 requireText('src/drawing/FreehandCaster.ts', ['SurfaceQuery', 'projectNear(']);
 requireText('src/indicators/SurfaceIndicatorManager.ts', ['class SurfaceIndicatorManager', 'projectNear(']);
-requireText('src/App.tsx', ['SurfaceIndicatorManager', 'new FreehandCaster(engine.scene, engine.surfaceQuery)', 'indicatorMgr.update(dt)']);
+requireText('src/validation/SurfaceValidationFixture.ts', ['class SurfaceValidationFixture', 'SurfaceValidationRamp', 'SurfaceValidationStep']);
+requireText('src/App.tsx', ['SurfaceIndicatorManager', 'new FreehandCaster(engine.scene, engine.surfaceQuery)', 'indicatorMgr.update(dt)', 'surfaceFixture']);
+requireText('src/terrain/TerrainManager.ts', ['uMarkVariant']);
 
 if (missing.length) {
   console.error('Missing relative imports:\n' + missing.join('\n'));
