@@ -1,0 +1,6 @@
+{
+  "name": "AetherVFX - Ability & Procedural VFX Engine",
+  "description": "A comprehensive Three.js browser platform for procedural VFX, macro casting, terrain terraforming, telegraphs, freehand drawing, performance lab, and data-driven ability composition.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
