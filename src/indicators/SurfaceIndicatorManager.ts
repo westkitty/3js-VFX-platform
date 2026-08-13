@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { SurfaceHit, TargetingShape } from '../types';
 import { SurfaceQuery } from '../core/SurfaceQuery';
+import { buildDirectionalSurfaceFrameTuple, mapLocalSurfacePoint } from '../core/SurfaceFrameModel';
 import {
   advanceIndicatorPhase,
   buildIndicatorLocalOutline,
@@ -76,14 +77,21 @@ export class SurfaceIndicatorManager {
 }
 
 function buildProjectedOutline(query: SurfaceQuery, hit: SurfaceHit, config: SurfaceIndicatorConfig): THREE.Vector3[] {
-  const normal = hit.normal.clone().normalize();
-  const projectedDirection = config.direction.clone().addScaledVector(normal, -config.direction.dot(normal));
-  const forward = projectedDirection.lengthSq() > 1e-10 ? projectedDirection.normalize() : hit.tangent.clone().normalize();
-  const right = new THREE.Vector3().crossVectors(forward, normal).normalize();
+  const frame = buildDirectionalSurfaceFrameTuple(
+    [hit.normal.x, hit.normal.y, hit.normal.z],
+    [config.direction.x, config.direction.y, config.direction.z],
+    [hit.tangent.x, hit.tangent.y, hit.tangent.z],
+  );
+  const normal = new THREE.Vector3(...frame.normal);
   const locals = buildIndicatorLocalOutline(config);
 
-  return locals.map(([x, y]) => {
-    const candidate = hit.point.clone().addScaledVector(right, x).addScaledVector(forward, y);
+  return locals.map((local) => {
+    const mapped = mapLocalSurfacePoint(
+      [hit.point.x, hit.point.y, hit.point.z],
+      frame,
+      local,
+    );
+    const candidate = new THREE.Vector3(...mapped);
     const projected = query.projectNear(candidate, normal, Math.max(2, config.radius, config.width, config.range * 0.25));
     const resolved = projected ?? hit;
     return resolved.point.clone().addScaledVector(resolved.normal, 0.035);
