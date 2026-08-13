@@ -143,7 +143,7 @@ export class TerrainManager {
       vertexShader: SurfaceDecalShader.vertexShader,
       fragmentShader: SurfaceDecalShader.fragmentShader,
       uniforms: {
-        uDecalType: { value: typeEnum },
+        uMarkVariant: { value: typeEnum },
         uColor: { value: new THREE.Color(colorHex) },
         uFade: { value: region.intensity },
         uTime: { value: 0 },
