@@ -1,18 +1,18 @@
 /** Browser-only visual ribbon adapter; owns no network, file, or external process behavior. */
 import * as THREE from 'three';
 import { AbilityModuleConfig } from '../../types';
-import { RibbonStrip } from '../RibbonStrip';
+import { VisualRibbon } from '../VisualRibbon';
 import { RuntimeVfxModule, VfxModuleFactoryContext, colorParam, numberParam } from './VfxRuntimeTypes';
 
 export class RibbonRuntimeModule implements RuntimeVfxModule {
   public readonly type = 'ribbon' as const;
-  private readonly ribbon: RibbonStrip;
+  private readonly ribbon: VisualRibbon;
   private readonly scene: THREE.Scene;
 
   constructor(config: AbilityModuleConfig, context: VfxModuleFactoryContext) {
     this.scene = context.scene;
     const path = context.request.path || [context.request.origin, context.request.target];
-    this.ribbon = new RibbonStrip(
+    this.ribbon = new VisualRibbon(
       context.scene,
       path,
       colorParam(config.params, 'colorCore', 0xffffff),
