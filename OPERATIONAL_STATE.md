@@ -1,7 +1,7 @@
 # Operational State: AetherVFX
 
 <!-- operational-state:metadata
-{"schema_version":1,"project_id":"aethervfx","project_name":"AetherVFX Ability and Procedural VFX Engine","project_root":"/mnt/data/aethervfx_work","artifact_path":"","state_revision":10,"last_updated":"2026-08-13T20:24:13Z","current_baseline":{"identity":"local source 9b34bc7be35bda6764229c64a12ca3210c2497e2; remote source checkpoint 5d7dfb8d663b7a32ed137989a71d6cd1ad4fd5d2; later documentation commits do not change source identity","state":"current-baseline","last_verified":"2026-08-13T20:24:13Z"},"scope_boundaries":["AetherVFX local repo and westkitty/3js-VFX-platform"],"linked_parent_state":null}
+{"schema_version":1,"project_id":"aethervfx","project_name":"AetherVFX Ability and Procedural VFX Engine","project_root":"/mnt/data/aethervfx_work","artifact_path":"","state_revision":11,"last_updated":"2026-08-13T20:35:23Z","current_baseline":{"identity":"local source 9b34bc7be35bda6764229c64a12ca3210c2497e2; remote source checkpoint 5d7dfb8d663b7a32ed137989a71d6cd1ad4fd5d2; later documentation commits do not change source identity","state":"current-baseline","last_verified":"2026-08-13T20:24:13Z"},"scope_boundaries":["AetherVFX local repo and westkitty/3js-VFX-platform"],"linked_parent_state":null}
 -->
 
 ## 1. Project Identity and Scope
@@ -157,6 +157,13 @@ No active source-confirmed Phase 1-3 defect is recorded. Browser acceptance gaps
 - **State:** `pending` — blocked by PND-002.
 <!-- /operational-state:entry -->
 
+<!-- operational-state:entry
+{"id":"PND-004","title":"Publish dependency-resolved CI validation","state":"pending","task":"Publish the local GitHub Actions validation workflow and run install/typecheck/runtime-spine/source-graph/build checks.","reason_pending":"The workflow is committed locally but platform safety blocked two contents writes and one Git-tree fallback before GitHub accepted the workflow file.","dependency":"Normal Git transport or a future connector path that permits workflow publication","priority":"next-supporting","validation_needed":"Confirm workflow exists on remote, inspect run result, and separate compiler/build failures from browser-only gaps","blocks_completion":false}
+-->
+### PND-004 — Publish dependency-resolved CI validation
+- **State:** `pending` — local workflow commit `11bf7937ffda65a0fc882fa9ecfd454d52606765`; remote publication did not occur.
+<!-- /operational-state:entry -->
+
 ## 10. Active Decisions, Defaults, and Prohibitions
 
 <!-- operational-state:entry
@@ -193,3 +200,4 @@ No active source-confirmed Phase 1-3 defect is recorded. Browser acceptance gaps
 | 8 | Phase 3 surface/freehand/indicator source published. |
 | 9 | Ramp/step fixture published; `uMarkVariant` mismatch repaired. |
 | 10 | Baseline identity normalized to immutable source checkpoint; active control plane compacted without changing active IDs or gates. |
+| 11 | Dependency-resolved CI workflow committed locally; remote workflow publication blocked by platform safety and recorded as pending. |
