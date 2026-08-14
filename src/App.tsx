@@ -10,6 +10,7 @@ import { AbilityManager, type AbilityPreviewState } from './abilities/AbilityRun
 import { FreehandCaster } from './drawing/FreehandCaster';
 import { SurfaceIndicatorManager, type SurfaceIndicatorConfig } from './indicators/SurfaceIndicatorManager';
 import { SurfaceValidationFixture } from './validation/SurfaceValidationFixture';
+import { runSurfaceRuntimeValidation, type SurfaceRuntimeValidationReport } from './validation/SurfaceRuntimeValidator';
 import { globalAbilityRegistry } from './abilities/AbilityRegistry';
 import { SurfaceHit, AbilityDefinition, WorkbenchMode, SurfaceMutationType } from './types';
 
@@ -26,32 +27,27 @@ import { PresetsModal } from './components/PresetsModal';
 
 import * as THREE from 'three';
 
+type SurfaceValidationWindow = Window & {
+  __AETHERVFX_SURFACE_VALIDATION__?: SurfaceRuntimeValidationReport;
+};
+
 export default function App() {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Subsystem Refs
   const engineRef = useRef<Engine | null>(null);
   const terrainRef = useRef<TerrainManager | null>(null);
   const abilityMgrRef = useRef<AbilityManager | null>(null);
   const freehandCasterRef = useRef<FreehandCaster | null>(null);
   const indicatorMgrRef = useRef<SurfaceIndicatorManager | null>(null);
 
-  // UI State
   const [currentMode, setCurrentMode] = useState<WorkbenchMode>('vfx_lab');
-  const [selectedAbility, setSelectedAbility] = useState<AbilityDefinition>(
-    globalAbilityRegistry.getAll()[0]
-  );
+  const [selectedAbility, setSelectedAbility] = useState<AbilityDefinition>(globalAbilityRegistry.getAll()[0]);
   const [showGrid, setShowGrid] = useState<boolean>(true);
   const [isSpellbookOpen, setIsSpellbookOpen] = useState<boolean>(false);
   const [activeSpellsCount, setActiveSpellsCount] = useState<number>(0);
-  const [previewState, setPreviewState] = useState<AbilityPreviewState>({
-    hasPreview: false,
-    time: 0,
-    duration: 0,
-    phase: 'done',
-  });
+  const [previewState, setPreviewState] = useState<AbilityPreviewState>({ hasPreview: false, time: 0, duration: 0, phase: 'done' });
+  const [surfaceValidationReport, setSurfaceValidationReport] = useState<SurfaceRuntimeValidationReport | null>(null);
 
-  // Terraformer State
   const [terraformTool, setTerraformTool] = useState<'sculpt' | 'mutate'>('mutate');
   const [sculptMode, setSculptMode] = useState<'elevate' | 'depress'>('elevate');
   const [mutationType, setMutationType] = useState<SurfaceMutationType>('scorch');
@@ -68,38 +64,33 @@ export default function App() {
   });
   const [activeIndicatorCount, setActiveIndicatorCount] = useState(0);
 
-  // Initialize 3D Engine & Managers
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // 1. Engine
     const engine = new Engine(containerRef.current);
     engineRef.current = engine;
 
-    // 2. Terrain
     const terrain = new TerrainManager(engine.scene);
     terrainRef.current = terrain;
 
-    const fixtureEnabled = new URLSearchParams(window.location.search).get('surfaceFixture') === '1';
+    const search = new URLSearchParams(window.location.search);
+    const surfaceAutoTestEnabled = search.get('surfaceAutoTest') === '1';
+    const fixtureEnabled = search.get('surfaceFixture') === '1' || surfaceAutoTestEnabled;
     const validationFixture = fixtureEnabled ? new SurfaceValidationFixture(engine.scene) : null;
     engine.surfaceQuery.setPlayableMeshes([
       terrain.getMesh(),
       ...(validationFixture?.getPlayableMeshes() ?? []),
     ]);
 
-    // 3. Ability Manager
     const abilityMgr = new AbilityManager(engine.scene, terrain, engine.postFX);
     abilityMgrRef.current = abilityMgr;
 
-    // 4. Freehand drawing
     const freehandCaster = new FreehandCaster(engine.scene, engine.surfaceQuery);
     freehandCasterRef.current = freehandCaster;
 
     const indicatorMgr = new SurfaceIndicatorManager(engine.scene, engine.surfaceQuery);
     indicatorMgrRef.current = indicatorMgr;
 
-    // Register Render Loop Callback. Keep high-frequency runtime state outside React;
-    // only sample preview UI state at a modest cadence.
     let previewUiElapsed = 0;
     engine.registerUpdateCallback((dt, time) => {
       terrain.update(time);
@@ -107,7 +98,6 @@ export default function App() {
       freehandCaster.update(time);
       indicatorMgr.update(dt);
 
-      // Update Engine Performance Metrics Counters
       engine.updateMetricCounters(
         abilityMgr.getTotalParticleCount(),
         terrain.getDecalCount(),
@@ -125,7 +115,22 @@ export default function App() {
 
     engine.start();
 
+    // Opt-in runtime validation. It runs after the engine's first scheduled render
+    // so renderer.info starts from the normal scene, and it never runs on the
+    // default user route.
+    const validationFrameId = surfaceAutoTestEnabled && validationFixture
+      ? requestAnimationFrame(() => {
+          const report = runSurfaceRuntimeValidation(engine, validationFixture, indicatorMgr, freehandCaster);
+          setSurfaceValidationReport(report);
+          (window as SurfaceValidationWindow).__AETHERVFX_SURFACE_VALIDATION__ = report;
+          if (report.passed) console.info('[AetherVFX surface validation] PASS', report);
+          else console.error('[AetherVFX surface validation] FAIL', report);
+        })
+      : null;
+
     return () => {
+      if (validationFrameId !== null) cancelAnimationFrame(validationFrameId);
+      if (surfaceAutoTestEnabled) delete (window as SurfaceValidationWindow).__AETHERVFX_SURFACE_VALIDATION__;
       abilityMgr.clearAll();
       freehandCaster.clear();
       indicatorMgr.clear();
@@ -225,11 +230,8 @@ export default function App() {
 
   const handleDrawPoint = (hit: SurfaceHit) => {
     if (!freehandCasterRef.current) return;
-    if (!freehandCasterRef.current.getIsDrawing()) {
-      freehandCasterRef.current.startDrawing(hit);
-    } else {
-      freehandCasterRef.current.addPoint(hit);
-    }
+    if (!freehandCasterRef.current.getIsDrawing()) freehandCasterRef.current.startDrawing(hit);
+    else freehandCasterRef.current.addPoint(hit);
   };
 
   const handleDrawFinish = () => {
@@ -258,14 +260,11 @@ export default function App() {
   const handleToggleGrid = () => {
     const next = !showGrid;
     setShowGrid(next);
-    if (terrainRef.current) {
-      terrainRef.current.setShowGrid(next);
-    }
+    terrainRef.current?.setShowGrid(next);
   };
 
   return (
     <div className="w-screen h-screen flex flex-col bg-slate-950 overflow-hidden font-sans">
-      {/* Top Navigation */}
       <TopNavbar
         currentMode={currentMode}
         onSelectMode={(mode) => setCurrentMode(mode)}
@@ -273,9 +272,7 @@ export default function App() {
         activeSpellCount={activeSpellsCount}
       />
 
-      {/* Main Viewport & HUD Layout */}
       <div className="flex-1 relative flex overflow-hidden">
-        {/* 3D WebGL Canvas Viewport */}
         <div ref={containerRef} className="flex-1 h-full relative">
           <SceneViewport
             engine={engineRef.current}
@@ -290,7 +287,6 @@ export default function App() {
           />
         </div>
 
-        {/* Right Mode-Specific Inspector Sidebar */}
         {currentMode === 'vfx_lab' && (
           <VfxLabPanel
             engine={engineRef.current}
@@ -298,24 +294,16 @@ export default function App() {
             previewState={previewState}
             onUpdateAbilityParams={handleSelectAbility}
             onTriggerCast={() => {
-              if (engineRef.current) {
-                const hit = engineRef.current.surfaceQuery.projectPoint(new THREE.Vector3(0, 0, 0));
-                if (hit) handleCastPreview(hit);
-              }
+              const hit = engineRef.current?.surfaceQuery.projectPoint(new THREE.Vector3(0, 0, 0));
+              if (hit) handleCastPreview(hit);
             }}
             onSeekPreview={handleSeekPreview}
             onRestartPreview={handleRestartPreview}
           />
         )}
 
-        {currentMode === 'ability_factory' && (
-          <PresetBuilderPanel onSelectAbility={handleSelectAbility} />
-        )}
-
-        {currentMode === 'macro_lab' && (
-          <SequenceLabPanel />
-        )}
-
+        {currentMode === 'ability_factory' && <PresetBuilderPanel onSelectAbility={handleSelectAbility} />}
+        {currentMode === 'macro_lab' && <SequenceLabPanel />}
         {currentMode === 'terraformer' && (
           <SurfaceLabPanel
             activeTool={terraformTool}
@@ -330,7 +318,6 @@ export default function App() {
             onReset={() => terrainRef.current?.resetTerrain()}
           />
         )}
-
         {currentMode === 'telegraphs' && (
           <IndicatorLabPanel
             config={indicatorConfig}
@@ -342,13 +329,33 @@ export default function App() {
             activeCount={activeIndicatorCount}
           />
         )}
-
         {currentMode === 'freehand_drawing' && <FreehandPanel />}
-
         {currentMode === 'perf_lab' && <PerformancePanel engine={engineRef.current} />}
       </div>
 
-      {/* Spellbook & Presets Modal */}
+      {surfaceValidationReport && (
+        <div
+          data-aethervfx-surface-validation={surfaceValidationReport.passed ? 'pass' : 'fail'}
+          className="pointer-events-none fixed bottom-3 left-3 z-50 w-[min(34rem,calc(100vw-1.5rem))] max-h-[45vh] overflow-hidden rounded-lg border border-slate-700 bg-slate-950/95 p-3 text-xs text-slate-200 shadow-2xl backdrop-blur"
+        >
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <strong className={surfaceValidationReport.passed ? 'text-emerald-300' : 'text-red-300'}>
+              Surface runtime validation: {surfaceValidationReport.passed ? 'PASS' : 'FAIL'}
+            </strong>
+            <span className="font-mono text-[10px] text-slate-500">
+              {surfaceValidationReport.checks.filter((check) => check.passed).length}/{surfaceValidationReport.checks.length}
+            </span>
+          </div>
+          <div className="max-h-[35vh] space-y-1 overflow-y-auto font-mono text-[10px]">
+            {surfaceValidationReport.checks.map((check) => (
+              <div key={check.id} className={check.passed ? 'text-slate-300' : 'text-red-300'}>
+                {check.passed ? 'PASS' : 'FAIL'} · {check.label} · {check.detail}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <PresetsModal
         isOpen={isSpellbookOpen}
         onClose={() => setIsSpellbookOpen(false)}
