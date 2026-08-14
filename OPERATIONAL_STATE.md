@@ -1,40 +1,40 @@
 # Operational State: AetherVFX
 
 <!-- operational-state:metadata
-{"schema_version":1,"project_id":"aethervfx","project_name":"AetherVFX Ability and Procedural VFX Engine","project_root":"/mnt/data/aethervfx_work","artifact_path":"","state_revision":14,"last_updated":"2026-08-13T21:00:42Z","current_baseline":{"identity":"local source 285b01049b83f254aa3640618dc9cd560c243944; remote source checkpoint 961f39e5924cd3b22cf2646d4b72c330754e1150; later documentation commits do not change source identity","state":"current-baseline","last_verified":"2026-08-13T21:00:42Z"},"scope_boundaries":["AetherVFX local repo and westkitty/3js-VFX-platform"],"linked_parent_state":null}
+{"schema_version":1,"project_id":"aethervfx","project_name":"AetherVFX Ability and Procedural VFX Engine","project_root":".","artifact_path":"","state_revision":15,"last_updated":"2026-08-14T00:59:00Z","current_baseline":{"identity":"remote source checkpoint 5b030d7bddb2c772104080a4ce5785e389473c5f; current container has no durable local clone; later documentation commits do not change source identity","state":"current-baseline","last_verified":"2026-08-14T00:59:00Z"},"scope_boundaries":["westkitty/3js-VFX-platform"],"linked_parent_state":null}
 -->
 
 ## 1. Project Identity and Scope
 
 - Vanilla Three.js + React procedural VFX/ability workbench.
 - Seven visible modes are protected: VFX Lab, Ability Factory, Macro/Sequence, Terraformer, Telegraph/Indicator, Freehand, Performance.
-- Remote: `westkitty/3js-VFX-platform`.
+- Canonical repository: `westkitty/3js-VFX-platform`.
 
 ## 2. Current Baseline
 
-- Local Phase 3 validation-hardening source: `285b01049b83f254aa3640618dc9cd560c243944`.
-- Remote Phase 3 validation-hardening source: `961f39e5924cd3b22cf2646d4b72c330754e1150`.
-- Documentation-only descendants do not redefine the source checkpoint.
-- Phase 3 is source-complete and has dependency-free geometry/timing/orientation checks, but real Three.js browser validation remains open. Phase 4 is gated.
+- Remote Phase 3 validation-support source checkpoint: `5b030d7bddb2c772104080a4ce5785e389473c5f`.
+- The previous local working directory was lost when the execution container recycled; GitHub is the durable source of truth for this checkpoint.
+- `surfaceAutoTest=1` now enables the validation fixture and runs an in-app Three.js runtime validator, exposes `window.__AETHERVFX_SURFACE_VALIDATION__`, and renders a visible PASS/FAIL overlay.
+- Phase 3 remains browser-unverified until that route runs in an unrestricted browser and returns PASS. Phase 4 remains gated.
 
 ## 3. Artifact Contract
 
 - Make existing modes truthful before adding breadth.
 - Do not enter Phase 4 before the Phase 3 browser gate is resolved or explicitly accepted as a blocker.
-- Build/source checks are not substitutes for browser behavior proof.
-- Stage, commit, and publish each bounded checkpoint.
+- Build/source/self-test presence is not a substitute for actually running the browser route.
+- Publish each bounded source checkpoint and preserve verified Phase 1-3 behavior.
 
 ## 4. Active Invariants
 
 <!-- operational-state:entry
-{"id":"INV-001","title":"Preserve seven-mode workbench","state":"requested","rule":"Keep all seven workbench modes visible while shallow paths become truthful working or explicitly staged paths.","scope":"Workbench shell","authority":"Accepted project assessment","evidence":"ROADMAP.md","validation_method":"Inspect mode routing after shell changes","last_checked":"revision 14","status":"active","recheck_trigger":"Navigation or mode-routing change"}
+{"id":"INV-001","title":"Preserve seven-mode workbench","state":"requested","rule":"Keep all seven workbench modes visible while shallow paths become truthful working or explicitly staged paths.","scope":"Workbench shell","authority":"Accepted project assessment","evidence":"ROADMAP.md","validation_method":"Inspect mode routing after shell changes","last_checked":"revision 15","status":"active","recheck_trigger":"Navigation or mode-routing change"}
 -->
 ### INV-001 — Preserve seven-mode workbench
-- **State:** `requested` — all seven modes remain visible; shallow paths may be staged rather than faked.
+- **State:** `requested` — all seven modes remain visible; staged modes must not masquerade as complete.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"INV-002","title":"No breadth before runtime truth","state":"requested","rule":"Do not add modes, schools, major effect families, or renderer migrations while the active phase gate is unverified.","scope":"All implementation","authority":"Accepted project assessment","evidence":"ROADMAP.md","validation_method":"Map each change to the active roadmap phase","last_checked":"revision 14","status":"active","recheck_trigger":"Explicit user direction change"}
+{"id":"INV-002","title":"No breadth before runtime truth","state":"requested","rule":"Do not add modes, schools, major effect families, or renderer migrations while the active phase gate is unverified.","scope":"All implementation","authority":"Accepted project assessment","evidence":"ROADMAP.md","validation_method":"Map each change to the active roadmap phase","last_checked":"revision 15","status":"active","recheck_trigger":"Explicit user direction change"}
 -->
 ### INV-002 — No breadth before runtime truth
 - **State:** `requested` — current phase gates control scope.
@@ -57,36 +57,43 @@
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"VER-003","title":"Phase 3 surface source published","state":"verified","capability":"Directional surface projection, freehand reprojection, surface indicators, and Indicator Lab wiring are published.","scope":"Remote source","verification_method":"Local source gates plus GitHub fetch","evidence":"local b09f2ef346707c5a60e3946763684cf07a38bada; remote b68623b33b575b37462fe332de5af4cac35daa85","artifact_revision":"b68623b33b575b37462fe332de5af4cac35daa85","last_verified":"2026-08-13T20:10:00Z","dependencies":"GitHub connector/local tooling","freshness":"incorporated","recheck_trigger":"Surface/freehand/indicator change"}
+{"id":"VER-003","title":"Phase 3 surface source published","state":"verified","capability":"Directional surface projection, freehand reprojection, surface indicators, and Indicator Lab wiring are published.","scope":"Remote source","verification_method":"Source gates plus GitHub fetch","evidence":"b68623b33b575b37462fe332de5af4cac35daa85","artifact_revision":"b68623b33b575b37462fe332de5af4cac35daa85","last_verified":"2026-08-13T20:10:00Z","dependencies":"GitHub connector","freshness":"incorporated","recheck_trigger":"Surface/freehand/indicator change"}
 -->
 ### VER-003 — Phase 3 surface source published
-- **State:** `verified` — local `b09f2ef`; remote `b68623b3`.
+- **State:** `verified` — `b68623b33b575b37462fe332de5af4cac35daa85`.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"VER-004","title":"Phase 3 fixture and shader repair published","state":"verified","capability":"Opt-in ramp/step fixture and TerrainManager uMarkVariant binding are published.","scope":"Validation-support source","verification_method":"GitHub App/fixture/TerrainManager fetch","evidence":"local 9b34bc7be35bda6764229c64a12ca3210c2497e2; remote 5d7dfb8d663b7a32ed137989a71d6cd1ad4fd5d2","artifact_revision":"5d7dfb8d663b7a32ed137989a71d6cd1ad4fd5d2","last_verified":"2026-08-13T20:22:02Z","dependencies":"GitHub connector","freshness":"incorporated","recheck_trigger":"Fixture/surface-mark change"}
+{"id":"VER-004","title":"Phase 3 fixture and shader repair published","state":"verified","capability":"Opt-in ramp/step fixture and TerrainManager uMarkVariant binding are published.","scope":"Validation-support source","verification_method":"GitHub App/fixture/TerrainManager fetch","evidence":"5d7dfb8d663b7a32ed137989a71d6cd1ad4fd5d2","artifact_revision":"5d7dfb8d663b7a32ed137989a71d6cd1ad4fd5d2","last_verified":"2026-08-13T20:22:02Z","dependencies":"GitHub connector","freshness":"incorporated","recheck_trigger":"Fixture/surface-mark change"}
 -->
 ### VER-004 — Phase 3 fixture and shader repair published
-- **State:** `verified` — local `9b34bc7`; remote `5d7dfb8d`.
+- **State:** `verified` — `5d7dfb8d663b7a32ed137989a71d6cd1ad4fd5d2`.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"VER-005","title":"Indicator model validation published","state":"verified","capability":"Five indicator outline families, clamps, and deterministic warning/commit/clear timing are covered by dependency-free executable checks and consumed by the manager.","scope":"Indicator geometry/timing model","verification_method":"indicator-model check, source graph, syntax pass, GitHub fetch","evidence":"local 3d5b92d46ed85efc0a018cf0a956130e5f09c8f5; remote 6f652628959b36f83362b447fe1cbf42fe809d55","artifact_revision":"6f652628959b36f83362b447fe1cbf42fe809d55","last_verified":"2026-08-13T20:54:44Z","dependencies":"Global TypeScript compiler and GitHub connector","freshness":"incorporated","recheck_trigger":"IndicatorModel or timing change"}
+{"id":"VER-005","title":"Indicator model validation published","state":"verified","capability":"Five indicator outline families, clamps, and deterministic warning/commit/clear timing are covered by dependency-free executable checks and consumed by the manager.","scope":"Indicator geometry/timing model","verification_method":"Indicator-model check, source graph, syntax pass, GitHub fetch","evidence":"6f652628959b36f83362b447fe1cbf42fe809d55","artifact_revision":"6f652628959b36f83362b447fe1cbf42fe809d55","last_verified":"2026-08-13T20:54:44Z","dependencies":"Global TypeScript compiler and GitHub connector","freshness":"incorporated","recheck_trigger":"IndicatorModel or timing change"}
 -->
 ### VER-005 — Indicator model validation published
 - **State:** `verified` — five shape families and deterministic timing checks pass.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"VER-006","title":"Surface-frame orientation model validation published","state":"verified","capability":"SurfaceQuery and indicators share one right-handed frame contract; horizontal, 15-degree slope, vertical, zero-normal, and direction-parallel-to-normal cases are dependency-free tested.","scope":"Surface frame construction and indicator local orientation","verification_method":"surface-frame check, indicator-model check, source graph, TS/TSX syntax pass, GitHub ref/source fetch","evidence":"local 285b01049b83f254aa3640618dc9cd560c243944; remote 961f39e5924cd3b22cf2646d4b72c330754e1150; Surface frame checks PASS; Indicator model checks PASS; Source graph PASS 62; TS/TSX syntax PASS 62","artifact_revision":"961f39e5924cd3b22cf2646d4b72c330754e1150","last_verified":"2026-08-13T21:00:42Z","dependencies":"Global TypeScript compiler and GitHub connector","freshness":"current source checkpoint","recheck_trigger":"SurfaceFrameModel, SurfaceQuery frame creation, or indicator basis change"}
+{"id":"VER-006","title":"Surface-frame orientation model validation published","state":"verified","capability":"SurfaceQuery and indicators share one right-handed frame contract; horizontal, slope, vertical, zero-normal, and direction-parallel-to-normal cases are dependency-free tested.","scope":"Surface frame construction and indicator local orientation","verification_method":"Surface-frame check, indicator-model check, source graph, syntax pass, GitHub fetch","evidence":"961f39e5924cd3b22cf2646d4b72c330754e1150","artifact_revision":"961f39e5924cd3b22cf2646d4b72c330754e1150","last_verified":"2026-08-13T21:00:42Z","dependencies":"Global TypeScript compiler and GitHub connector","freshness":"incorporated","recheck_trigger":"SurfaceFrameModel, SurfaceQuery frame creation, or indicator basis change"}
 -->
 ### VER-006 — Surface-frame orientation model validation published
-- **State:** `verified` — shared handedness and slope/vertical/degenerate frame checks pass; source is published at `961f39e5`.
+- **State:** `verified` — shared handedness and slope/vertical/degenerate checks pass.
+<!-- /operational-state:entry -->
+
+<!-- operational-state:entry
+{"id":"VER-007","title":"Opt-in Three.js surface runtime validator published","state":"verified","capability":"The app contains an opt-in runtime route that uses the real Engine, SurfaceQuery, WebGLRenderer, SurfaceIndicatorManager, validation ramp/steps, and FreehandCaster to produce a machine-readable and visible PASS/FAIL report.","scope":"Phase 3 validation-support source","verification_method":"TypeScript syntax transpile for changed TS/TSX, GitHub compare/fetch, bounded three-file remote diff","evidence":"remote source checkpoint 5b030d7bddb2c772104080a4ce5785e389473c5f; changed files: SurfaceRuntimeValidator.ts, App.tsx, source-graph-check.cjs","artifact_revision":"5b030d7bddb2c772104080a4ce5785e389473c5f","last_verified":"2026-08-14T00:59:00Z","dependencies":"GitHub connector; runtime execution still requires an unrestricted browser","freshness":"current source checkpoint","recheck_trigger":"Runtime validator, fixture, App validation wiring, surface input, indicator, freehand, or renderer change"}
+-->
+### VER-007 — Opt-in Three.js surface runtime validator published
+- **State:** `verified` — source route published at `5b030d7b`; runtime PASS is not yet claimed.
 <!-- /operational-state:entry -->
 
 ## 6. Known Not Working
 
-No active source-confirmed Phase 1-3 defect is recorded. Browser-only acceptance gaps remain unverified rather than inferred fixed.
+No active source-confirmed Phase 1-3 defect is recorded. The remaining browser acceptance gate is unverified, not inferred fixed.
 
 ## 7. Implemented but Unverified
 
@@ -112,10 +119,10 @@ No active source-confirmed Phase 1-3 defect is recorded. Browser-only acceptance
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"UNV-005","title":"Resource cleanup paths","state":"implemented-unverified","capability":"VFX, ability, terrain, indicator, fixture, and teardown cleanup paths exist.","evidence":"Source plus VfxPool check","validation_method":"Repeated browser lifecycle with renderer.info","recheck_trigger":"Ownership/disposal change"}
+{"id":"UNV-005","title":"Resource cleanup paths","state":"implemented-unverified","capability":"VFX, ability, terrain, indicator, fixture, and teardown cleanup paths exist; the new runtime validator checks freehand scene/GPU geometry recovery when executed.","evidence":"Source plus VfxPool checks and VER-007 route","validation_method":"Run surfaceAutoTest route plus repeated browser lifecycle with renderer.info","recheck_trigger":"Ownership/disposal change"}
 -->
 ### UNV-005 — Resource cleanup paths
-- **State:** `implemented-unverified` — needs repeated browser lifecycle proof.
+- **State:** `implemented-unverified` — runtime validator can now exercise freehand geometry recovery, but has not yet run in an unrestricted browser.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
@@ -126,42 +133,42 @@ No active source-confirmed Phase 1-3 defect is recorded. Browser-only acceptance
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"UNV-007","title":"Surface-aware freehand and indicators","state":"implemented-unverified","capability":"Local-normal projection, freehand reprojection, and five indicator shapes with timing are implemented; pure geometry/timing/frame contracts are verified.","evidence":"Phase 3 source, fixture, VER-005 and VER-006","validation_method":"Use ?surfaceFixture=1 on ramp/steps in the actual Three.js app","recheck_trigger":"Surface/freehand/indicator/input change"}
+{"id":"UNV-007","title":"Surface-aware freehand and indicators","state":"implemented-unverified","capability":"Local-normal projection, freehand reprojection, five indicator shapes, pointer raycast checks, timing, and cleanup validation are implemented; pure contracts are verified and a real-runtime auto-test route is published.","evidence":"Phase 3 source, fixture, VER-005, VER-006, VER-007","validation_method":"Open the app with ?surfaceAutoTest=1 and require window.__AETHERVFX_SURFACE_VALIDATION__.passed === true plus the visible PASS overlay","recheck_trigger":"Surface/freehand/indicator/input/validator change"}
 -->
 ### UNV-007 — Surface-aware freehand and indicators
-- **State:** `implemented-unverified` — pure contracts are verified; real Three.js surface placement/freehand still needs `?surfaceFixture=1`.
+- **State:** `implemented-unverified` — decisive route is now `?surfaceAutoTest=1`; source existence alone does not close it.
 <!-- /operational-state:entry -->
 
 ## 8. Unknown or Evidence-Stale State
 
 <!-- operational-state:entry
-{"id":"UNK-001","title":"Dependency-resolved runtime unverified","state":"unknown","decisive_check":"Install dependencies; run lint, runtime-spine, source-graph, indicator-model, surface-frame, build, then browser smoke.","evidence":"Chromium and global TypeScript exist, but project node_modules is absent; npm install timed out and outbound package/CDN network access is unavailable.","last_checked":"revision 14"}
+{"id":"UNK-001","title":"Dependency-resolved runtime unverified","state":"unknown","decisive_check":"Run install/typecheck/build and then open ?surfaceAutoTest=1 in an unrestricted browser; require runtime report PASS and perform the Phase 2 preview smoke.","evidence":"Current container has Chromium and global TypeScript but no project node_modules. Machine Chromium policy sets URLBlocklist=[*], blocking file:// and localhost navigation with ERR_BLOCKED_BY_ADMINISTRATOR; outbound sockets/package/CDN access are also unavailable.","last_checked":"revision 15"}
 -->
 ### UNK-001 — Dependency-resolved runtime unverified
-- **State:** `unknown` — decisive check remains dependency-resolved build + browser smoke.
+- **State:** `unknown` — the current execution environment cannot perform the decisive browser load without bypassing platform policy, which is prohibited.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"UNK-002","title":"Exact local/remote parity unverified","state":"unknown","decisive_check":"Fresh-clone remote and compare intended paths/hashes after connector-orphan cleanup.","evidence":"Connector publication produced different histories and may leave unreferenced shims.","last_checked":"revision 14"}
+{"id":"UNK-002","title":"Exact local/remote parity unverified","state":"unknown","decisive_check":"Fresh-clone remote and compare intended paths/hashes after connector-orphan cleanup.","evidence":"The prior local clone was lost on container recycle; connector publication also produced historical local/remote divergence.","last_checked":"revision 15"}
 -->
 ### UNK-002 — Exact local/remote parity unverified
-- **State:** `unknown` — fresh-clone/path-hash comparison required.
+- **State:** `unknown` — GitHub is the current durable source; fresh-clone parity remains the decisive check.
 <!-- /operational-state:entry -->
 
 ## 9. Pending Work
 
 <!-- operational-state:entry
-{"id":"PND-001","title":"Parity cleanup","state":"pending","task":"Remove connector-only orphan files and normalize history when transport permits.","reason_pending":"Non-blocking to active graph.","dependency":"Normal Git transport/deletion support","priority":"low","validation_needed":"Fresh clone comparison","blocks_completion":false}
+{"id":"PND-001","title":"Parity cleanup","state":"pending","task":"Remove connector-only orphan files and normalize history when normal Git transport permits.","reason_pending":"Non-blocking to active graph.","dependency":"Normal Git transport/deletion support","priority":"low","validation_needed":"Fresh clone comparison","blocks_completion":false}
 -->
 ### PND-001 — Parity cleanup
 - **State:** `pending` — low priority; non-blocking.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"PND-002","title":"Phase 3 browser surface validation","state":"pending","task":"Run ?surfaceFixture=1 and test all five indicator shapes plus freehand across ramp/steps.","reason_pending":"Actual Three.js/React browser proof is unavailable because project dependencies cannot be installed and outbound package/CDN access is blocked.","dependency":"Dependency-resolved browser environment","priority":"next","validation_needed":"Pointer hits, local orientation, no phantom y=0, timing, cleanup, Phase 2 smoke","blocks_completion":true}
+{"id":"PND-002","title":"Phase 3 browser surface validation","state":"pending","task":"Open ?surfaceAutoTest=1 in an unrestricted browser and require the runtime report to PASS; then smoke the Phase 2 VFX preview/edit/replay path.","reason_pending":"The current container's managed Chromium blocks all navigation and outbound sockets; bypassing that platform policy is out of scope.","dependency":"Normal dependency-resolved browser environment","priority":"next","validation_needed":"WebGL context, ramp/step SurfaceQuery hits, camera-NDC pointer hits, no phantom floor, ten indicator placements across ramp+step, warning/commit/fade cleanup, freehand traversal across four step heights, scene/GPU geometry recovery, Phase 2 smoke","blocks_completion":true}
 -->
 ### PND-002 — Phase 3 browser surface validation
-- **State:** `pending` — **next and blocking Phase 3 completion**.
+- **State:** `pending` — **next and blocking Phase 3 completion**. Run `?surfaceAutoTest=1`; PASS must be observed, not assumed.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
@@ -172,16 +179,16 @@ No active source-confirmed Phase 1-3 defect is recorded. Browser-only acceptance
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"PND-004","title":"Publish dependency-resolved CI validation","state":"pending","task":"Publish the local GitHub Actions validation workflow and run install/typecheck/runtime-spine/source-graph/indicator-model/surface-frame/build checks.","reason_pending":"Workflow publication is blocked by platform safety for .github/workflows paths.","dependency":"Normal Git transport or a connector path that permits workflow publication","priority":"next-supporting","validation_needed":"Confirm workflow exists remotely and inspect run result","blocks_completion":false}
+{"id":"PND-004","title":"Publish dependency-resolved CI validation","state":"pending","task":"Publish the local GitHub Actions validation workflow and run install/typecheck/runtime-spine/source-graph/indicator-model/surface-frame/build checks.","reason_pending":"Workflow publication remains blocked by platform safety for .github/workflows paths.","dependency":"Normal Git transport or a connector path that permits workflow publication","priority":"supporting","validation_needed":"Confirm workflow exists remotely and inspect run result","blocks_completion":false}
 -->
 ### PND-004 — Publish dependency-resolved CI validation
-- **State:** `pending` — local workflow exists; remote publication did not occur.
+- **State:** `pending` — supporting path only; it does not replace PND-002 browser evidence.
 <!-- /operational-state:entry -->
 
 ## 10. Active Decisions, Defaults, and Prohibitions
 
 <!-- operational-state:entry
-{"id":"DEC-001","title":"Assessment controls development order","state":"requested","rule":"Make existing modes truthful before breadth; follow ROADMAP.md; do not enter Phase 4 before PND-002 is resolved or explicitly accepted as a blocker.","scope":"All AetherVFX work","authority":"Explicit user confirmation","evidence":"Accepted assessment and ROADMAP.md","validation_method":"Map each checkpoint to the roadmap gate","last_checked":"revision 14","status":"active","recheck_trigger":"Explicit user direction change"}
+{"id":"DEC-001","title":"Assessment controls development order","state":"requested","rule":"Make existing modes truthful before breadth; follow ROADMAP.md; do not enter Phase 4 before PND-002 is resolved or explicitly accepted as a blocker.","scope":"All AetherVFX work","authority":"Explicit user confirmation","evidence":"Accepted assessment and ROADMAP.md","validation_method":"Map each checkpoint to the roadmap gate","last_checked":"revision 15","status":"active","recheck_trigger":"Explicit user direction change"}
 -->
 ### DEC-001 — Assessment controls development order
 - **State:** `requested` — Phase 4 waits on PND-002.
@@ -191,18 +198,19 @@ No active source-confirmed Phase 1-3 defect is recorded. Browser-only acceptance
 
 | ID | State | Evidence | Decisive validation |
 |---|---|---|---|
-| VER-006 | verified | local `285b010`; remote `961f39e5`; surface-frame/model/source/syntax PASS | rerun pure/source checks + remote fetch |
-| VER-005 | verified | local `3d5b92d`; remote `6f652628` | rerun indicator-model/source checks |
+| VER-007 | verified source route | remote `5b030d7b`; bounded 3-file diff; changed-file syntax pass | re-fetch runtime validator/App wiring |
+| VER-006 | verified pure model | remote `961f39e5`; surface-frame/model/source/syntax PASS | rerun pure/source checks |
+| VER-005 | verified pure model | remote `6f652628`; indicator-model checks | rerun indicator-model/source checks |
 | UNV-006 | implemented-unverified | Phase 2 source | browser preview/edit/replay |
-| UNV-007 | implemented-unverified | Phase 3 + fixture + pure contracts | `?surfaceFixture=1` browser gate |
-| UNK-001 | unknown | dependencies unavailable | install/build + browser smoke |
-| UNK-002 | unknown | connector-shaped histories | fresh-clone parity |
+| UNV-007 | implemented-unverified | Phase 3 + fixture + pure contracts + runtime auto-test source | `?surfaceAutoTest=1` report PASS |
+| UNK-001 | unknown | current browser/package environment blocked | unrestricted install/build/browser smoke |
+| UNK-002 | unknown | local clone lost; connector-shaped history | fresh-clone parity |
 
 ## 12. Current Change Scope and Impact Radius
 
-- **Allowed next:** Phase 3 browser validation support and evidence-driven repairs only.
-- **Protected:** Phase 1 timing/shake/resources; Phase 2 preview semantics; Phase 3 projection contracts; seven-mode shell.
-- **Mandatory checks:** `check:indicator-model`, `check:surface-frame`, source graph, TS/TSX syntax/import graph, browser ramp/steps when dependencies exist, remote source verification after repair.
+- **Allowed next:** execute the published Phase 3 runtime validator in a normal browser and make only evidence-driven Phase 3 repairs.
+- **Protected:** Phase 1 timing/shake/resources; Phase 2 preview semantics; Phase 3 projection/frame contracts; seven-mode shell; default route without validation query flags.
+- **Mandatory checks after any repair:** indicator model, surface frame, source graph, TS/TSX syntax/typecheck/build when available, `?surfaceAutoTest=1` runtime report, Phase 2 preview smoke, remote source verification.
 - **Stop:** no Phase 4 before PND-002 is resolved or explicitly accepted as a blocker.
 
 ## 13. Compact Revision Log
@@ -215,6 +223,7 @@ No active source-confirmed Phase 1-3 defect is recorded. Browser-only acceptance
 | 8 | Phase 3 surface/freehand/indicator source published. |
 | 9 | Ramp/step fixture published; `uMarkVariant` mismatch repaired. |
 | 10 | Baseline identity normalized to immutable source checkpoint. |
-| 11 | Dependency-resolved CI workflow committed locally; remote workflow publication blocked. |
+| 11 | Dependency-resolved CI workflow prepared locally; remote workflow publication blocked. |
 | 12-13 | Indicator geometry/timing model extracted, validated, and published. |
-| 14 | Shared surface-frame model extracted, handedness unified, slope/vertical/degenerate orientation checks added, and source published at `961f39e5`. |
+| 14 | Shared surface-frame model extracted, handedness unified, orientation checks added, source published at `961f39e5`. |
+| 15 | Published `surfaceAutoTest=1` real-runtime validator and machine-readable/visible report at source checkpoint `5b030d7b`; decisive browser execution remains pending. |
