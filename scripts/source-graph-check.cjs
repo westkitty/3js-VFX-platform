@@ -56,7 +56,8 @@ requireText('src/drawing/FreehandCaster.ts', ['SurfaceQuery', 'projectNear(']);
 requireText('src/indicators/IndicatorModel.ts', ['buildIndicatorLocalOutline', 'advanceIndicatorPhase']);
 requireText('src/indicators/SurfaceIndicatorManager.ts', ['class SurfaceIndicatorManager', 'projectNear(', 'advanceIndicatorPhase', 'buildDirectionalSurfaceFrameTuple']);
 requireText('src/validation/SurfaceValidationFixture.ts', ['class SurfaceValidationFixture', 'SurfaceValidationRamp', 'SurfaceValidationStep']);
-requireText('src/App.tsx', ['SurfaceIndicatorManager', 'new FreehandCaster(engine.scene, engine.surfaceQuery)', 'indicatorMgr.update(dt)', 'surfaceFixture']);
+requireText('src/validation/SurfaceRuntimeValidator.ts', ['runSurfaceRuntimeValidation', 'pointer-ramp', 'pointer-steps', 'indicator-conformance', 'freehand-steps']);
+requireText('src/App.tsx', ['SurfaceIndicatorManager', 'new FreehandCaster(engine.scene, engine.surfaceQuery)', 'indicatorMgr.update(dt)', 'surfaceAutoTest', '__AETHERVFX_SURFACE_VALIDATION__']);
 requireText('src/terrain/TerrainManager.ts', ['uMarkVariant']);
 
 if (missing.length) {
