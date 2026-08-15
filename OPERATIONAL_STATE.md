@@ -1,7 +1,7 @@
 # Operational State: AetherVFX
 
 <!-- operational-state:metadata
-{"schema_version":1,"project_id":"aethervfx","project_name":"AetherVFX Ability and Procedural VFX Engine","project_root":".","artifact_path":"","state_revision":16,"last_updated":"2026-08-15T01:20:00Z","current_baseline":{"identity":"fresh durable local clone of origin/main at 5b030d7bddb2c772104080a4ce5785e389473c5f (HEAD c4bcafb); repaired by deleting orphaned src/vfx/runtime/ShockwaveRuntimeModule.ts, then dependency-resolved install/typecheck/checks/build and a real-browser ?surfaceAutoTest=1 run were completed against this clone before committing","state":"current-baseline","last_verified":"2026-08-15T01:20:00Z"},"scope_boundaries":["westkitty/3js-VFX-platform"],"linked_parent_state":null}
+{"schema_version":1,"project_id":"aethervfx","project_name":"AetherVFX Ability and Procedural VFX Engine","project_root":".","artifact_path":"","state_revision":17,"last_updated":"2026-08-15T14:45:00Z","current_baseline":{"identity":"local clone of origin/main at 4704efd158f237b459d7b2008f06d743f74270c5 plus the Phase 4 declarative ability and semantic sequence runtime; dependency-resolved install/typecheck/six checks/build and full browser acceptance were completed against this tree before committing","state":"current-baseline","last_verified":"2026-08-15T14:45:00Z"},"scope_boundaries":["westkitty/3js-VFX-platform"],"linked_parent_state":null}
 -->
 
 ## 1. Project Identity and Scope
@@ -12,11 +12,12 @@
 
 ## 2. Current Baseline
 
-- Remote Phase 3 validation-support source checkpoint: `5b030d7bddb2c772104080a4ce5785e389473c5f` (HEAD `c4bcafb` at clone time).
-- A fresh durable local clone of `origin/main` was made for this revision. `npm install`, `tsc --noEmit`, all four `check:*` scripts, and `vite build` were run against it.
-- One pre-existing defect was found and repaired: `src/vfx/runtime/ShockwaveRuntimeModule.ts` was dead/orphaned source importing a `ShockRing` class that no longer exists (renamed to `PulseRing`); it was never registered in `VfxModuleRegistry` (which wires the `shockwave` type to `PulseRuntimeModule`) and was not reachable from any import graph. It broke `tsc --noEmit`, and `scripts/source-graph-check.cjs` already treats the `ShockRing` name as a stale-path pattern. The file was deleted; no other source changed.
-- `surfaceAutoTest=1` enables the validation fixture and runs an in-app Three.js runtime validator, exposes `window.__AETHERVFX_SURFACE_VALIDATION__`, and renders a visible PASS/FAIL overlay.
-- **Phase 3 browser surface validation is now VERIFIED.** The route was run in a real Chromium browser against a local Vite dev server and returned `passed: true` on all 12 checks, with the visible "Surface runtime validation: PASS" overlay confirmed. See VER-008. Phase 4 is now unlocked per DEC-001/PND-002, but Phase 4 work was explicitly not started in this revision.
+- Phase 3 verified checkpoint: `4704efd158f237b459d7b2008f06d743f74270c5`.
+- Revision 17 implements Phase 4 on top of it: a versioned Ajv-validated declarative ability schema, a hardened registry, a real Ability Factory, ten data-only abilities, and a deterministic semantic sequence runtime with a working Sequence Designer.
+- `surfaceAutoTest=1` still enables the validation fixture and runs the in-app Three.js runtime validator, exposes `window.__AETHERVFX_SURFACE_VALIDATION__`, and renders a visible PASS/FAIL overlay. It was re-run on the Phase 4 tree and still returns 12/12.
+- **Phase 3 browser surface validation remains VERIFIED** (VER-008) and was re-confirmed against Phase 4 source (VER-014).
+- **Phase 4 is COMPLETE and browser-verified** (VER-011 … VER-013). Phase 5 was not started.
+- One shared compiler-config change was required: `resolveJsonModule` was enabled so the data-only ability/sequence packs can be real `.json` files. Note that this project compiles **without** `strictNullChecks`, so discriminated-union narrowing does not apply; Phase 4 validation results are therefore flat result objects (`ok` + nullable payload + `issues`) rather than discriminated unions. Enabling `strictNullChecks` was deliberately not attempted, as it would cascade into protected Phase 1-3 code.
 
 ## 3. Artifact Contract
 
@@ -113,6 +114,34 @@
 - **State:** `verified` — install, typecheck, all four repo checks, and production build all pass on a fresh clone.
 <!-- /operational-state:entry -->
 
+<!-- operational-state:entry
+{"id":"VER-011","title":"Phase 4 declarative ability schema, validation, and migration","state":"verified","capability":"Ability documents are versioned JSON validated by Ajv. Import validates and migrates; malformed, unsupported-version, and code-bearing documents are rejected with structured errors. Export produces schema-conforming JSON and round-trips. The registry is the authoritative admission gate with an explicit duplicate policy and atomic import.","scope":"src/schema/AbilitySchema.ts, src/schema/AbilityValidator.ts, src/abilities/AbilityRegistry.ts","verification_method":"npm run check:ability-schema (dependency-resolved, no DOM/WebGL) plus browser import/export proof","evidence":"check:ability-schema PASS. Covers: valid definition accepted (incl. all 7 builtins); 10 malformed cases rejected; 6 code-injection cases rejected (extra top-level property, injected handler field, unknown module param, module import specifier, URL in colour field, unknown module type); schemaVersion 2.0.0 rejected as unsupportedVersion; 1.0.0 -> 1.1.0 migration verified field-by-field (shake->cameraShake 0.3, flash->flashIntensity 0.4, iconName default, budget.maxParticles derived 300); 7 invalid module configurations rejected while negative particle speed stays legal; export/import round-trip preserves the definition exactly (deepEqual); duplicate id rejected by default and replaced only on explicit duplicates:'replace'; failed batch import registers nothing (atomic)","artifact_revision":"revision 17","last_verified":"2026-08-15T14:45:00Z","dependencies":"ajv ^8.20.0","freshness":"current","recheck_trigger":"Schema, validator, migration, or registry change"}
+-->
+### VER-011 — Phase 4 declarative ability schema, validation, and migration
+- **State:** `verified` — `check:ability-schema` PASS; JSON is data-only and cannot carry executable payloads.
+<!-- /operational-state:entry -->
+
+<!-- operational-state:entry
+{"id":"VER-012","title":"Phase 4 semantic sequence runtime","state":"verified","capability":"Eight semantic node types (sequence, parallel, wait, emit, travel, impact, field, residue) whose meaning comes from scheduling behavior. Deterministic, seeded, driven solely by EngineClock simulation deltas, with leftover-time threading for frame-rate independence.","scope":"src/sequence/SequenceModel.ts, src/sequence/SequenceRuntime.ts, src/sequence/AbilitySequenceEmitter.ts, src/schema/SequenceSchema.ts, src/schema/SequenceValidator.ts","verification_method":"npm run check:sequence-runtime (pure) plus real-browser run","evidence":"check:sequence-runtime PASS. Covers: sequence ordering by schedule (emits at 0.00/0.50/0.75s, not array position); wait holds exactly its duration; parallel children start together, join 'all' finishes with the slowest (1.5s) and join 'any' with the fastest (0.5s); parallel emits fire together at elapsed 0; travel derives duration from distance/speed (24/60=0.4s), explicit duration wins, progress observable mid-flight, zero-speed does not hang; impact/field/residue each hold their duration and report progress; identical definition+seed reproduces an identical run and each emit gets a distinct derived seed while a different root seed changes the stream; 1/240 and 1/15 step sizes produce identical stage start times; zero/negative/NaN deltas never advance state; restart resets elapsed, emit count and completed stages and reproduces the seed stream; stop returns to idle, releases owned runtime exactly once and refuses to advance; the shipped pack validates, only emits registered ability ids, and runs to completion; 8 sequence-validation rejection cases including an injected onTick property; source scan proves SequenceRuntime/SequenceModel/AbilitySequenceEmitter contain no setTimeout, setInterval, Date.now, performance.now, requestAnimationFrame or Math.random","artifact_revision":"revision 17","last_verified":"2026-08-15T14:45:00Z","dependencies":"EngineClock","freshness":"current","recheck_trigger":"Sequence model, runtime, emitter, or schema change"}
+-->
+### VER-012 — Phase 4 semantic sequence runtime
+- **State:** `verified` — `check:sequence-runtime` PASS; no wall-clock timing anywhere in the sequence engine.
+<!-- /operational-state:entry -->
+
+<!-- operational-state:entry
+{"id":"VER-013","title":"Phase 4 browser acceptance","state":"verified","capability":"Ability Factory and Sequence Designer were exercised in a real Chromium browser against the real Three.js runtime.","scope":"Browser acceptance","verification_method":"Interactive browser session on a local Vite dev server (localhost:4310), Claude Browser tool","evidence":"ABILITY FACTORY: opened Ability Factory; authored 'Browser Proof Lance' from UI controls (name, school=stormcraft, shape=cone which revealed the conditional angle control), id derived as factory_browser_proof_lance; status 'registered: factory_browser_proof_lance'; the ability appeared in the preset bar and its modules rendered in the Live VFX Inspector as 'Runtime bound'; preview cast through the existing runtime (timeline 0.00/1.81s, phases windup->travel->impact->hold->fade). PARAMETER PROOF: at a fixed seek position (t=0.30) the rendered framebuffer was sampled via gl.readPixels; particles colour #ff0000 raised only the R channel (4.142 -> 4.539 and 5.147 across two runs, lit pixels 4237/14281) while G stayed at baseline 5.461; particles colour #00ff00 raised only the G channel (5.461 -> 5.856, lit 4244) while R stayed at baseline 4.142 - the elevated channel tracks the parameter, proving the change reaches the real render and is not UI-only. EXPORT/IMPORT: export produced a 972-char schemaVersion 1.1.0 document; re-importing it returned 'imported: factory_custom_vfx_study' with no issues. REJECTION: importing a document with an unknown school, a 'javascript:alert(1)' colour and an injected onCast field was visibly rejected with 'rejected: 4 issue(s)' listing '(root) must NOT have additional properties', '/school must be equal to one of the allowed values' and '/modules/0/params/colorCore must match pattern', and nothing was registered. SEQUENCE: opened Macro Sandbox; seq_storm_opening loaded with all 9 stages (sequence, wait, emit, travel, impact, parallel, field, emit, residue), duration 3.30s, no unresolved emit targets; Run progressed wait(0.40)->emit(fired, emits 1, owned 1)->travel->impact->parallel; the parallel node and BOTH children were simultaneously active with emits 2 and owned 2; the 0.50s emit child completed while the 1.20s field child continued (join 'all'); parallel finished at exactly 2.50s and residue began; completion at exactly 3.30/3.30s with 9/9 stages complete. PAUSE: pausing EngineClock froze sequence elapsed at 0.81/3.30s across multiple rendered frames with the active stage unchanged; resuming continued to 1.02s. RESTART: reset to 0.00s, 0 complete, 0 emits, 0 owned. STOP: from elapsed 0.57 with 1 emit and 1 owned instance, stop returned status idle, elapsed 0.00, owned 0, all stages pending, and the scene's Active badge cleared - no orphan sequence-owned runtime. Zero console errors throughout; the only console output was a pre-existing THREE PCFSoftShadowMap deprecation warning.","artifact_revision":"revision 17","last_verified":"2026-08-15T14:45:00Z","dependencies":"unrestricted browser","freshness":"current","recheck_trigger":"Factory UI, Sequence UI, App wiring, or runtime change"}
+-->
+### VER-013 — Phase 4 browser acceptance
+- **State:** `verified` — Factory (11/11 steps) and Sequence (8/8 steps) proofs completed in a real browser with zero console errors.
+<!-- /operational-state:entry -->
+
+<!-- operational-state:entry
+{"id":"VER-014","title":"Phase 1-3 regression gates hold on Phase 4 source","state":"verified","capability":"Phase 4 did not regress any protected earlier-phase behavior.","scope":"Regression","verification_method":"Re-ran every prior gate plus the browser routes against the Phase 4 tree","evidence":"?surfaceAutoTest=1 returned window.__AETHERVFX_SURFACE_VALIDATION__.passed === true with 12/12 checks and the visible 'Surface runtime validation: PASS' overlay (data-aethervfx-surface-validation='pass'). Phase 2 VFX Lab smoke on the default route with the builtin Amber Orb: preview cast (0.00/1.55s windup); pause froze the timeline and relabelled the control to Resume; Step advanced the paused preview (0.02 -> 0.07s; the readout is throttled to 0.05s granularity) while the engine stayed paused; seek to 1.20s changed the phase to 'fade'; Restart returned to 0.00/1.55s 'windup'; live parameter edit proven by VER-013's channel test. All seven workbench modes present and named: VFX Laboratory, Ability Factory, Macro Sandbox, Terraformer, Telegraph Lab, Freehand Caster, Performance Lab. 19 abilities registered (7 builtin + 10 declarative + 2 factory-authored). npm run lint clean; check:runtime-spine, check:indicator-model, check:surface-frame, check:source-graph all PASS; vite build succeeded.","artifact_revision":"revision 17","last_verified":"2026-08-15T14:45:00Z","dependencies":"none","freshness":"current","recheck_trigger":"Any Phase 1-3 surface change"}
+-->
+### VER-014 — Phase 1-3 regression gates hold on Phase 4 source
+- **State:** `verified` — surface validator still 12/12, Phase 2 smoke passes, seven-mode shell intact.
+<!-- /operational-state:entry -->
+
 ## 6. Known Not Working
 
 No active source-confirmed Phase 1-3 defect is recorded. `src/vfx/runtime/ShockwaveRuntimeModule.ts` (orphaned dead file, unreachable from any import graph, referencing a since-renamed `ShockRing` class) previously broke `tsc --noEmit`; it was deleted in revision 16 (see VER-010). The browser acceptance gate that remained open through revision 15 is now closed — see VER-008.
@@ -134,10 +163,10 @@ No active source-confirmed Phase 1-3 defect is recorded. `src/vfx/runtime/Shockw
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"UNV-004","title":"Deterministic runtime services","state":"implemented-unverified","capability":"EngineClock fixed-step/pause and SeededRandom are implemented.","evidence":"Focused checks","validation_method":"Dependency-resolved checks plus browser pause/step","recheck_trigger":"Clock/RNG change"}
+{"id":"UNV-004","title":"Deterministic runtime services","state":"partially-verified","capability":"EngineClock fixed-step/pause and SeededRandom are implemented.","evidence":"check:runtime-spine plus revision 17: pausing EngineClock froze the sequence runtime across multiple rendered frames and resuming continued it (VER-013); Step advanced the paused VFX preview (VER-014); check:sequence-runtime proves step-size-independent progression and reproducible seed streams (VER-012).","validation_method":"Dependency-resolved checks plus browser pause/step","recheck_trigger":"Clock/RNG change"}
 -->
 ### UNV-004 — Deterministic runtime services
-- **State:** `implemented-unverified` — needs dependency-resolved/browser proof.
+- **State:** `partially-verified` — clock pause/step and seeded determinism proven in browser and pure checks; a dedicated timeScale/long-run soak is still unverified.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
@@ -194,10 +223,10 @@ No active source-confirmed Phase 1-3 defect is recorded. `src/vfx/runtime/Shockw
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"PND-003","title":"Phase 4 factory/sequence runtime","state":"pending","task":"Implement schema-validated Ability Factory and semantic sequence nodes.","reason_pending":"Unlocked as of revision 16 (PND-002 resolved) but intentionally not started in this revision, per explicit instruction to stop at Phase 3 validation.","dependency":"PND-002 (resolved)","priority":"later","validation_needed":"Ten declarative abilities plus node tests","blocks_completion":false}
+{"id":"PND-003","title":"Phase 4 factory/sequence runtime","state":"resolved","task":"Implement schema-validated Ability Factory and semantic sequence nodes.","reason_pending":"Completed in revision 17. See VER-011 (schema/validation/migration), VER-012 (semantic sequence runtime), VER-013 (browser acceptance).","dependency":"PND-002 (resolved)","priority":"done","validation_needed":"Ten declarative abilities plus node tests - delivered and passing","blocks_completion":false}
 -->
 ### PND-003 — Phase 4 factory/sequence runtime
-- **State:** `pending` — unlocked (PND-002 resolved) but explicitly not started in revision 16.
+- **State:** `resolved` — implemented and browser-verified in revision 17.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
@@ -230,13 +259,17 @@ No active source-confirmed Phase 1-3 defect is recorded. `src/vfx/runtime/Shockw
 | UNV-007 | verified | VER-008 | `?surfaceAutoTest=1` report PASS — done |
 | UNK-001 | resolved | VER-008/009/010 | unrestricted install/build/browser smoke — done |
 | UNK-002 | partially-resolved | fresh clone matched remote before repair commit | ongoing parity re-check after future divergence |
+| VER-011 | verified pure + browser | `check:ability-schema` PASS; browser import/export/reject proof | rerun after schema/validator/registry change |
+| VER-012 | verified pure + browser | `check:sequence-runtime` PASS; browser run/pause/restart/stop proof | rerun after sequence model/runtime change |
+| VER-013 | verified real browser | Factory 11/11 and Sequence 8/8 steps; channel-isolated render proof | rerun after Factory/Sequence UI or App wiring change |
+| VER-014 | verified regression | 12/12 surface validator, Phase 2 smoke, 7 modes, build | rerun after any Phase 1-3 surface change |
 
 ## 12. Current Change Scope and Impact Radius
 
-- **Allowed next:** Phase 4 is unlocked (PND-002 resolved) but was not started in revision 16. Any future work should follow ROADMAP.md and PND-003.
-- **Protected:** Phase 1 timing/shake/resources; Phase 2 preview semantics (re-confirmed by VER-009); Phase 3 projection/frame contracts; seven-mode shell (re-confirmed visible in revision 16 smoke test); default route without validation query flags (re-confirmed it does not run the validator).
-- **Mandatory checks after any repair:** indicator model, surface frame, source graph, TS/TSX syntax/typecheck/build, `?surfaceAutoTest=1` runtime report, Phase 2 preview smoke, remote source verification — all run and passing as of revision 16.
-- **Stop:** Phase 4 was intentionally not started in this revision, per explicit instruction, even though it is now unlocked.
+- **Allowed next:** Phase 5 per ROADMAP.md. It was explicitly **not** started in revision 17.
+- **Protected:** Phase 1 timing/shake/resources; Phase 2 preview semantics (re-confirmed by VER-014); Phase 3 projection/frame contracts and the 12-check surface validator (re-confirmed by VER-014); seven-mode shell (re-confirmed); default route without validation query flags; EngineClock as sole simulation-time owner (now also relied on by the sequence runtime).
+- **Mandatory checks after any repair:** lint/typecheck, runtime-spine, indicator-model, surface-frame, source-graph, ability-schema, sequence-runtime, production build, `?surfaceAutoTest=1` runtime report, Phase 2 preview smoke, Phase 4 Factory/Sequence browser proofs — all run and passing as of revision 17.
+- **Stop:** Phase 5 not started.
 
 ## 13. Compact Revision Log
 
@@ -253,3 +286,4 @@ No active source-confirmed Phase 1-3 defect is recorded. `src/vfx/runtime/Shockw
 | 14 | Shared surface-frame model extracted, handedness unified, orientation checks added, source published at `961f39e5`. |
 | 15 | Published `surfaceAutoTest=1` real-runtime validator and machine-readable/visible report at source checkpoint `5b030d7b`; decisive browser execution remains pending. |
 | 16 | Fresh clone; deleted orphaned `ShockwaveRuntimeModule.ts` (stale `ShockRing` reference, unreachable dead code) fixing `tsc --noEmit`; ran install/typecheck/4 checks/build all PASS; ran real-browser `?surfaceAutoTest=1` — 12/12 PASS with visible overlay; ran Phase 2 regression smoke — PASS. PND-002 resolved. Phase 4 unlocked, not started. |
+| 17 | **Phase 4 complete.** Added a versioned Ajv-validated ability schema with 1.0.0→1.1.0 migration, hardened `AbilityRegistry` (validated admission, explicit duplicate policy, atomic import, inspectable errors), a real Ability Factory UI (author/validate/register/preview/export/import/reject), ten data-only abilities in `ability-pack.json`, and a deterministic semantic sequence runtime (sequence/parallel/wait/emit/travel/impact/field/residue) driven solely by EngineClock with a working Sequence Designer. Added `check:ability-schema` and `check:sequence-runtime`. Enabled `resolveJsonModule`; added `.gitignore` and committed the npm lockfile. All eight gates plus both browser proofs PASS; Phase 1-3 regressions clean (surface validator still 12/12). PND-003 resolved. Phase 5 not started. |

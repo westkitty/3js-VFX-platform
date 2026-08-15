@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Engine } from './core/Engine';
 import { TerrainManager } from './terrain/TerrainManager';
 import { AbilityManager, type AbilityPreviewState } from './abilities/AbilityRuntime';
@@ -12,6 +12,10 @@ import { SurfaceIndicatorManager, type SurfaceIndicatorConfig } from './indicato
 import { SurfaceValidationFixture } from './validation/SurfaceValidationFixture';
 import { runSurfaceRuntimeValidation, type SurfaceRuntimeValidationReport } from './validation/SurfaceRuntimeValidator';
 import { globalAbilityRegistry } from './abilities/AbilityRegistry';
+import { AbilitySequenceEmitter } from './sequence/AbilitySequenceEmitter';
+import { SequenceRuntime, type SequenceRuntimeState } from './sequence/SequenceRuntime';
+import { loadSequenceLibrary, upsertSequence } from './sequence/SequenceLibrary';
+import type { SequenceDefinition } from './sequence/SequenceModel';
 import { SurfaceHit, AbilityDefinition, WorkbenchMode, SurfaceMutationType } from './types';
 
 import { TopNavbar } from './components/TopNavbar';
@@ -31,6 +35,12 @@ type SurfaceValidationWindow = Window & {
   __AETHERVFX_SURFACE_VALIDATION__?: SurfaceRuntimeValidationReport;
 };
 
+const IDLE_SEQUENCE_STATE: SequenceRuntimeState = {
+  status: 'idle', elapsed: 0, duration: 0,
+  activeNodeIds: [], completedNodeIds: [], nodeProgress: {},
+  emitCount: 0, lastEmit: null,
+};
+
 export default function App() {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -39,6 +49,8 @@ export default function App() {
   const abilityMgrRef = useRef<AbilityManager | null>(null);
   const freehandCasterRef = useRef<FreehandCaster | null>(null);
   const indicatorMgrRef = useRef<SurfaceIndicatorManager | null>(null);
+  const sequenceRuntimeRef = useRef<SequenceRuntime | null>(null);
+  const sequenceEmitterRef = useRef<AbilitySequenceEmitter | null>(null);
 
   const [currentMode, setCurrentMode] = useState<WorkbenchMode>('vfx_lab');
   const [selectedAbility, setSelectedAbility] = useState<AbilityDefinition>(globalAbilityRegistry.getAll()[0]);
@@ -63,6 +75,12 @@ export default function App() {
     commitDuration: 0.35,
   });
   const [activeIndicatorCount, setActiveIndicatorCount] = useState(0);
+
+  const sequenceLibrary = useMemo(() => loadSequenceLibrary(), []);
+  const [sequenceDefinitions, setSequenceDefinitions] = useState<SequenceDefinition[]>(sequenceLibrary.definitions);
+  const [selectedSequenceId, setSelectedSequenceId] = useState<string | null>(sequenceLibrary.definitions[0]?.id ?? null);
+  const [sequenceState, setSequenceState] = useState<SequenceRuntimeState>(IDLE_SEQUENCE_STATE);
+  const [sequenceOwnedCount, setSequenceOwnedCount] = useState(0);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -91,12 +109,36 @@ export default function App() {
     const indicatorMgr = new SurfaceIndicatorManager(engine.scene, engine.surfaceQuery);
     indicatorMgrRef.current = indicatorMgr;
 
+    // Sequence emits are placed deterministically: the stage's derived seed
+    // chooses the bearing, so the same sequence always lands the same way.
+    const sequenceEmitter = new AbilitySequenceEmitter(abilityMgr, globalAbilityRegistry, (event) => {
+      const origin = new THREE.Vector3(0, 1, 0);
+      const bearing = ((event.seed % 3600) / 3600) * Math.PI * 2;
+      const flat = new THREE.Vector3(Math.cos(bearing) * 8, 0, Math.sin(bearing) * 8);
+      const hit = engine.surfaceQuery.projectPoint(flat);
+      return { origin, target: hit ? hit.point.clone() : flat, surface: hit };
+    });
+    sequenceEmitterRef.current = sequenceEmitter;
+
+    const sequenceRuntime = new SequenceRuntime(sequenceEmitter);
+    sequenceRuntimeRef.current = sequenceRuntime;
+
+    const initialSequence = sequenceLibrary.definitions[0];
+    if (initialSequence) {
+      sequenceRuntime.load(initialSequence);
+      setSequenceState(sequenceRuntime.getState());
+    }
+
     let previewUiElapsed = 0;
     engine.registerUpdateCallback((dt, time) => {
       terrain.update(time);
       abilityMgr.update(dt, time);
       freehandCaster.update(time);
       indicatorMgr.update(dt);
+
+      // EngineClock owns simulation time: pausing the clock stops delivering
+      // deltas here, which is exactly what pauses the sequence.
+      sequenceRuntime.advance(dt);
 
       engine.updateMetricCounters(
         abilityMgr.getTotalParticleCount(),
@@ -110,6 +152,8 @@ export default function App() {
         setActiveSpellsCount(abilityMgr.getActiveCount());
         setPreviewState(abilityMgr.getPreviewState());
         setActiveIndicatorCount(indicatorMgr.getActiveCount());
+        setSequenceState(sequenceRuntime.getState());
+        setSequenceOwnedCount(sequenceEmitter.getOwnedCount());
       }
     });
 
@@ -131,6 +175,7 @@ export default function App() {
     return () => {
       if (validationFrameId !== null) cancelAnimationFrame(validationFrameId);
       if (surfaceAutoTestEnabled) delete (window as SurfaceValidationWindow).__AETHERVFX_SURFACE_VALIDATION__;
+      sequenceRuntime.stop();
       abilityMgr.clearAll();
       freehandCaster.clear();
       indicatorMgr.clear();
@@ -257,6 +302,54 @@ export default function App() {
     }
   };
 
+  const syncSequenceUi = () => {
+    const runtime = sequenceRuntimeRef.current;
+    if (runtime) setSequenceState(runtime.getState());
+    setSequenceOwnedCount(sequenceEmitterRef.current?.getOwnedCount() ?? 0);
+  };
+
+  const handleSelectSequence = (id: string) => {
+    setSelectedSequenceId(id);
+    const runtime = sequenceRuntimeRef.current;
+    const definition = sequenceDefinitions.find((candidate) => candidate.id === id);
+    if (!runtime || !definition) return;
+    runtime.stop();
+    runtime.load(definition);
+    syncSequenceUi();
+  };
+
+  const handleRunSequence = () => {
+    const runtime = sequenceRuntimeRef.current;
+    const definition = sequenceDefinitions.find((candidate) => candidate.id === selectedSequenceId);
+    if (!runtime || !definition) return;
+
+    // Running is a simulation action; resume the clock so the stages advance.
+    if (engineRef.current) engineRef.current.isPaused = false;
+    runtime.load(definition);
+    runtime.start();
+    syncSequenceUi();
+  };
+
+  const handleRestartSequence = () => {
+    sequenceRuntimeRef.current?.restart();
+    syncSequenceUi();
+  };
+
+  const handleStopSequence = () => {
+    sequenceRuntimeRef.current?.stop();
+    syncSequenceUi();
+  };
+
+  const handleImportSequence = (definition: SequenceDefinition) => {
+    setSequenceDefinitions((previous) => upsertSequence(previous, definition));
+    setSelectedSequenceId(definition.id);
+    const runtime = sequenceRuntimeRef.current;
+    if (!runtime) return;
+    runtime.stop();
+    runtime.load(definition);
+    syncSequenceUi();
+  };
+
   const handleToggleGrid = () => {
     const next = !showGrid;
     setShowGrid(next);
@@ -303,7 +396,19 @@ export default function App() {
         )}
 
         {currentMode === 'ability_factory' && <PresetBuilderPanel onSelectAbility={handleSelectAbility} />}
-        {currentMode === 'macro_lab' && <SequenceLabPanel />}
+        {currentMode === 'macro_lab' && (
+          <SequenceLabPanel
+            definitions={sequenceDefinitions}
+            selectedId={selectedSequenceId}
+            runtimeState={sequenceState}
+            ownedInstanceCount={sequenceOwnedCount}
+            onSelectSequence={handleSelectSequence}
+            onRun={handleRunSequence}
+            onRestart={handleRestartSequence}
+            onStop={handleStopSequence}
+            onImportSequence={handleImportSequence}
+          />
+        )}
         {currentMode === 'terraformer' && (
           <SurfaceLabPanel
             activeTool={terraformTool}

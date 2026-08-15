@@ -1,0 +1,169 @@
+[
+  {
+    "schemaVersion": "1.1.0",
+    "id": "decl_ember_lance",
+    "name": "Ember Lance",
+    "school": "pyromancy",
+    "description": "Drives a compact ember core down a line and scorches the surface where it lands.",
+    "iconName": "Flame",
+    "targeting": { "shape": "line", "range": 24, "minRange": 1, "surfacePolicy": "project" },
+    "timing": { "windup": 0.18, "travelSpeed": 26, "hold": 0.5, "fade": 0.4, "cooldown": 1.1 },
+    "modules": [
+      { "type": "orb", "params": { "radius": 0.55, "noiseScale": 4, "colorCore": "#ffdd66", "colorOuter": "#ff4400" } },
+      { "type": "particles", "params": { "count": 150, "speed": 8, "size": 1, "color": "#ff9933" } },
+      { "type": "decal", "params": { "decalType": "scorch", "radius": 3.5 } }
+    ],
+    "feedback": { "cameraShake": 0.18, "flashIntensity": 0.35, "lightColor": "#ff6622", "lightRadius": 16 },
+    "budget": { "maxParticles": 260, "dynamicLights": 1 }
+  },
+  {
+    "schemaVersion": "1.1.0",
+    "id": "decl_cinder_bloom",
+    "name": "Cinder Bloom",
+    "school": "pyromancy",
+    "description": "Opens a molten ring over a zone and leaves cooling lava across the impact area.",
+    "iconName": "Flame",
+    "targeting": { "shape": "zone", "range": 18, "radius": 6, "surfacePolicy": "project" },
+    "timing": { "windup": 0.32, "travelSpeed": 0, "hold": 1.1, "fade": 0.7, "cooldown": 3.2 },
+    "modules": [
+      { "type": "shockwave", "params": { "radius": 8, "ringWidth": 0.12, "fillAlpha": 0.35, "colorPrimary": "#ffaa33", "colorSecondary": "#661100" } },
+      { "type": "particles", "params": { "count": 320, "speed": 10, "size": 1.4, "color": "#ff7722" } },
+      { "type": "decal", "params": { "decalType": "lava", "radius": 6 } }
+    ],
+    "feedback": { "cameraShake": 0.34, "flashIntensity": 0.55, "lightColor": "#ff5500", "lightRadius": 24 },
+    "budget": { "maxParticles": 480, "dynamicLights": 2 }
+  },
+  {
+    "schemaVersion": "1.1.0",
+    "id": "decl_rime_wall",
+    "name": "Rime Wall",
+    "school": "cryomancy",
+    "description": "Raises a broad frozen band across a rectangle and frosts the ground beneath it.",
+    "iconName": "Snowflake",
+    "targeting": { "shape": "rectangle", "range": 20, "width": 10, "surfacePolicy": "project" },
+    "timing": { "windup": 0.25, "travelSpeed": 0, "hold": 1.6, "fade": 0.9, "cooldown": 3.5 },
+    "modules": [
+      { "type": "ribbon", "params": { "width": 1.4, "opacity": 0.9, "noiseFreq": 3, "noiseAmp": 0.12, "colorCore": "#ffffff", "colorGlow": "#66ddff" } },
+      { "type": "particles", "params": { "count": 200, "speed": 3, "size": 0.9, "color": "#cceeff" } },
+      { "type": "decal", "params": { "decalType": "frost", "radius": 5 } }
+    ],
+    "feedback": { "cameraShake": 0.12, "flashIntensity": 0.25, "lightColor": "#88e5ff", "lightRadius": 18 },
+    "budget": { "maxParticles": 300, "dynamicLights": 1 }
+  },
+  {
+    "schemaVersion": "1.1.0",
+    "id": "decl_hoarfrost_ring",
+    "name": "Hoarfrost Ring",
+    "school": "cryomancy",
+    "description": "Expands a brittle frost ring outward from the caster's mark.",
+    "iconName": "Snowflake",
+    "targeting": { "shape": "ring", "range": 16, "radius": 7, "surfacePolicy": "project" },
+    "timing": { "windup": 0.2, "travelSpeed": 0, "hold": 0.9, "fade": 0.6, "cooldown": 2.4 },
+    "modules": [
+      { "type": "shockwave", "params": { "radius": 7, "ringWidth": 0.09, "fillAlpha": 0.22, "colorPrimary": "#ddf5ff", "colorSecondary": "#0066aa" } },
+      { "type": "particles", "params": { "count": 180, "speed": 5, "size": 0.8, "color": "#aaddff" } },
+      { "type": "decal", "params": { "decalType": "frost", "radius": 7 } }
+    ],
+    "feedback": { "cameraShake": 0.16, "flashIntensity": 0.3, "lightColor": "#66ccff", "lightRadius": 20 },
+    "budget": { "maxParticles": 280, "dynamicLights": 1 }
+  },
+  {
+    "schemaVersion": "1.1.0",
+    "id": "decl_arc_lash",
+    "name": "Arc Lash",
+    "school": "stormcraft",
+    "description": "Snaps a hard white-violet beam along a line with a fast crackling tail.",
+    "iconName": "Zap",
+    "targeting": { "shape": "line", "range": 28, "minRange": 2, "surfacePolicy": "project" },
+    "timing": { "windup": 0.08, "travelSpeed": 60, "hold": 0.3, "fade": 0.25, "cooldown": 0.9 },
+    "modules": [
+      { "type": "beam", "params": { "radius": 0.5, "intensity": 2.4, "scrollSpeed": 18, "colorCore": "#ffffff", "colorGlow": "#7744ff" } },
+      { "type": "particles", "params": { "count": 130, "speed": 16, "size": 0.7, "color": "#bb99ff" } }
+    ],
+    "feedback": { "cameraShake": 0.22, "flashIntensity": 0.6, "lightColor": "#8866ff", "lightRadius": 20 },
+    "budget": { "maxParticles": 220, "dynamicLights": 2 }
+  },
+  {
+    "schemaVersion": "1.1.0",
+    "id": "decl_tempest_cone",
+    "name": "Tempest Cone",
+    "school": "stormcraft",
+    "description": "Sprays a wide charged cone of driven motes ahead of the caster.",
+    "iconName": "CloudLightning",
+    "targeting": { "shape": "cone", "range": 14, "angle": 1.0472, "surfacePolicy": "project" },
+    "timing": { "windup": 0.14, "travelSpeed": 0, "hold": 0.7, "fade": 0.45, "cooldown": 2 },
+    "modules": [
+      { "type": "ribbon", "params": { "width": 1.1, "opacity": 0.75, "noiseFreq": 8, "noiseAmp": 0.9, "colorCore": "#eef4ff", "colorGlow": "#5588ff" } },
+      { "type": "particles", "params": { "count": 260, "speed": 14, "size": 1.1, "color": "#88aaff" } }
+    ],
+    "feedback": { "cameraShake": 0.24, "flashIntensity": 0.4, "lightColor": "#6699ff", "lightRadius": 19 },
+    "budget": { "maxParticles": 400, "dynamicLights": 1 }
+  },
+  {
+    "schemaVersion": "1.1.0",
+    "id": "decl_gravity_well",
+    "name": "Gravity Well",
+    "school": "void",
+    "description": "Collapses a dark core over a zone, drawing motes inward before it scars the ground.",
+    "iconName": "Disc",
+    "targeting": { "shape": "zone", "range": 15, "radius": 5.5, "surfacePolicy": "project" },
+    "timing": { "windup": 0.45, "travelSpeed": 0, "hold": 1.4, "fade": 0.65, "cooldown": 4.5 },
+    "modules": [
+      { "type": "orb", "params": { "radius": 1.8, "noiseScale": 2, "colorCore": "#000000", "colorOuter": "#7700cc" } },
+      { "type": "shockwave", "params": { "radius": 8.5, "ringWidth": 0.07, "fillAlpha": 0.18, "colorPrimary": "#aa33ff", "colorSecondary": "#000000" } },
+      { "type": "particles", "params": { "count": 300, "speed": -7, "size": 1.1, "color": "#cc55ff" } },
+      { "type": "decal", "params": { "decalType": "void_scar", "radius": 5.5 } }
+    ],
+    "feedback": { "cameraShake": 0.45, "flashIntensity": 0.6, "lightColor": "#8822cc", "lightRadius": 22 },
+    "budget": { "maxParticles": 520, "dynamicLights": 2 }
+  },
+  {
+    "schemaVersion": "1.1.0",
+    "id": "decl_null_thread",
+    "name": "Null Thread",
+    "school": "void",
+    "description": "Traces a thin unlit seam along a drawn path that swallows the light around it.",
+    "iconName": "Sparkles",
+    "targeting": { "shape": "path", "range": 30, "surfacePolicy": "project" },
+    "timing": { "windup": 0.12, "travelSpeed": 24, "hold": 0.8, "fade": 0.55, "cooldown": 2.2 },
+    "modules": [
+      { "type": "ribbon", "params": { "width": 0.45, "opacity": 0.95, "noiseFreq": 2, "noiseAmp": 0.08, "colorCore": "#221133", "colorGlow": "#8800dd" } },
+      { "type": "particles", "params": { "count": 140, "speed": -3, "size": 0.6, "color": "#aa44ee" } }
+    ],
+    "feedback": { "cameraShake": 0.14, "flashIntensity": 0.2, "lightColor": "#7700bb", "lightRadius": 14 },
+    "budget": { "maxParticles": 240, "dynamicLights": 1 }
+  },
+  {
+    "schemaVersion": "1.1.0",
+    "id": "decl_stone_bulwark",
+    "name": "Stone Bulwark",
+    "school": "earth",
+    "description": "Sets a crystalline barrier across a rectangle and hardens the ground under it.",
+    "iconName": "Layers",
+    "targeting": { "shape": "rectangle", "range": 18, "width": 8, "surfacePolicy": "project" },
+    "timing": { "windup": 0.3, "travelSpeed": 0, "hold": 2.2, "fade": 1, "cooldown": 4 },
+    "modules": [
+      { "type": "particles", "params": { "count": 170, "speed": 4, "size": 1.2, "color": "#66ffcc" } },
+      { "type": "decal", "params": { "decalType": "crystal", "radius": 4.5 } }
+    ],
+    "feedback": { "cameraShake": 0.28, "flashIntensity": 0.18, "lightColor": "#33ffbb", "lightRadius": 15 },
+    "budget": { "maxParticles": 260, "dynamicLights": 1 }
+  },
+  {
+    "schemaVersion": "1.1.0",
+    "id": "decl_astral_weave",
+    "name": "Astral Weave",
+    "school": "starsilk",
+    "description": "Lays a shimmering starsilk braid along a drawn path and gilds the surface behind it.",
+    "iconName": "Star",
+    "targeting": { "shape": "path", "range": 32, "surfacePolicy": "project" },
+    "timing": { "windup": 0.1, "travelSpeed": 20, "hold": 1.2, "fade": 0.8, "cooldown": 2.6 },
+    "modules": [
+      { "type": "ribbon", "params": { "width": 0.75, "opacity": 0.85, "noiseFreq": 5, "noiseAmp": 0.18, "colorCore": "#ffffff", "colorGlow": "#ffcc66" } },
+      { "type": "particles", "params": { "count": 220, "speed": 3, "size": 0.85, "color": "#ffe9aa" } },
+      { "type": "decal", "params": { "decalType": "golden_rune", "radius": 3.2 } }
+    ],
+    "feedback": { "cameraShake": 0.15, "flashIntensity": 0.42, "lightColor": "#ffcc77", "lightRadius": 18 },
+    "budget": { "maxParticles": 340, "dynamicLights": 2 }
+  }
+]

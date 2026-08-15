@@ -1,0 +1,58 @@
+[
+  {
+    "schemaVersion": "1.0.0",
+    "id": "seq_storm_opening",
+    "name": "Storm Opening",
+    "description": "Charge, lash, bolt travel, strike, then a held static field alongside a cone burst, closing on residue.",
+    "seed": 20260815,
+    "root": {
+      "id": "storm_root",
+      "type": "sequence",
+      "label": "Storm Opening",
+      "children": [
+        { "id": "storm_charge", "type": "wait", "label": "Charge", "duration": 0.4 },
+        { "id": "storm_lash", "type": "emit", "label": "Arc Lash", "abilityId": "decl_arc_lash", "duration": 0.2 },
+        { "id": "storm_bolt", "type": "travel", "label": "Bolt Travel", "distance": 24, "speed": 60 },
+        { "id": "storm_strike", "type": "impact", "label": "Strike", "duration": 0.3 },
+        {
+          "id": "storm_after",
+          "type": "parallel",
+          "label": "Aftermath",
+          "join": "all",
+          "children": [
+            { "id": "storm_static", "type": "field", "label": "Static Field", "duration": 1.2 },
+            { "id": "storm_cone", "type": "emit", "label": "Tempest Cone", "abilityId": "decl_tempest_cone", "duration": 0.5 }
+          ]
+        },
+        { "id": "storm_residue", "type": "residue", "label": "Scorch Residue", "duration": 0.8 }
+      ]
+    }
+  },
+  {
+    "schemaVersion": "1.0.0",
+    "id": "seq_frost_cascade",
+    "name": "Frost Cascade",
+    "description": "Opens a frost ring, pauses, then races a chill field against a short timer before settling.",
+    "seed": 71042,
+    "root": {
+      "id": "frost_root",
+      "type": "sequence",
+      "label": "Frost Cascade",
+      "children": [
+        { "id": "frost_ring", "type": "emit", "label": "Hoarfrost Ring", "abilityId": "decl_hoarfrost_ring", "duration": 0.3 },
+        { "id": "frost_gap", "type": "wait", "label": "Settle", "duration": 0.25 },
+        {
+          "id": "frost_race",
+          "type": "parallel",
+          "label": "First To Finish",
+          "join": "any",
+          "children": [
+            { "id": "frost_chill", "type": "field", "label": "Chill Field", "duration": 1.5 },
+            { "id": "frost_timer", "type": "wait", "label": "Short Timer", "duration": 0.5 }
+          ]
+        },
+        { "id": "frost_settle", "type": "residue", "label": "Frost Residue", "duration": 0.6 }
+      ]
+    }
+  }
+]
