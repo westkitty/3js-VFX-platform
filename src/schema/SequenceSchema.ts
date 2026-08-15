@@ -47,7 +47,7 @@ const nodeBranches = [
   },
   {
     if: { properties: { type: { enum: STAGE_TYPES } }, required: ['type'] },
-    then: { required: ['duration'], properties: { children: false, abilityId: false, distance: false, speed: false } },
+    then: { required: ['duration'], properties: { children: false, distance: false, speed: false } },
   },
 ];
 

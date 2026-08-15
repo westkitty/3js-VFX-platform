@@ -129,6 +129,15 @@ export default function App() {
       setSequenceState(sequenceRuntime.getState());
     }
 
+    (window as any).__RUNTIME__ = {
+      engine,
+      terrain,
+      abilityMgr,
+      sequenceRuntime,
+      sequenceEmitter,
+      globalAbilityRegistry
+    };
+
     let previewUiElapsed = 0;
     engine.registerUpdateCallback((dt, time) => {
       terrain.update(time);

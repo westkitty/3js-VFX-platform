@@ -500,6 +500,121 @@ function checkNoWallClockTimers() {
   }
 }
 
+function checkDeclarativeStageAbilityIdValidation() {
+  const base = (stage: Record<string, unknown>) => ({
+    schemaVersion: '1.0.0',
+    id: 'seq_stage_test',
+    name: 'Stage Test',
+    description: 'Testing optional abilityId on stages',
+    seed: 42,
+    root: {
+      id: 'root',
+      type: 'sequence',
+      children: [stage],
+    },
+  });
+
+  // 1. Valid sequence JSON containing residue, impact, field with optional abilityId
+  for (const type of ['residue', 'impact', 'field'] as const) {
+    // Valid with abilityId
+    const withAbility = validateSequenceDocument(base({ id: `${type}_node`, type, duration: 1.5, abilityId: 'decl_ember_lance' }));
+    assert.equal(withAbility.ok, true, `${type} with valid abilityId must validate`);
+    assert.equal((withAbility.definition!.root as any).children[0].abilityId, 'decl_ember_lance');
+
+    // Valid without abilityId
+    const withoutAbility = validateSequenceDocument(base({ id: `${type}_node`, type, duration: 1.5 }));
+    assert.equal(withoutAbility.ok, true, `${type} without abilityId must validate`);
+
+    // Invalid abilityId patterns
+    const badId1 = validateSequenceDocument(base({ id: `${type}_node`, type, duration: 1.5, abilityId: '123_invalid' }));
+    assert.equal(badId1.ok, false, `${type} with leading digit abilityId must be rejected`);
+
+    const badId2 = validateSequenceDocument(base({ id: `${type}_node`, type, duration: 1.5, abilityId: 'has-hyphen' }));
+    assert.equal(badId2.ok, false, `${type} with hyphenated abilityId must be rejected`);
+
+    const badId3 = validateSequenceDocument(base({ id: `${type}_node`, type, duration: 1.5, abilityId: '' }));
+    assert.equal(badId3.ok, false, `${type} with empty abilityId must be rejected`);
+
+    // Unknown or executable fields must be rejected
+    const executableField = validateSequenceDocument(base({ id: `${type}_node`, type, duration: 1.5, code: 'process.exit(1)' }));
+    assert.equal(executableField.ok, false, `${type} with unknown field "code" must be rejected`);
+
+    const onEnterField = validateSequenceDocument(base({ id: `${type}_node`, type, duration: 1.5, onEnter: 'alert(1)' }));
+    assert.equal(onEnterField.ok, false, `${type} with unknown field "onEnter" must be rejected`);
+
+    // Missing duration must fail
+    const missingDuration = validateSequenceDocument(base({ id: `${type}_node`, type, abilityId: 'decl_ember_lance' }));
+    assert.equal(missingDuration.ok, false, `${type} without duration must be rejected`);
+  }
+}
+
+function checkDeclarativeResidueRuntimeEmission() {
+  const jsonDoc = {
+    schemaVersion: '1.0.0',
+    id: 'seq_residue_test',
+    name: 'Residue Emission Test',
+    description: 'Tests runtime emission from residue stage',
+    seed: 54321,
+    root: {
+      id: 'root',
+      type: 'sequence',
+      children: [
+        { id: 'charge', type: 'wait', duration: 0.2 },
+        { id: 'strike_impact', type: 'impact', duration: 0.3, abilityId: 'decl_ember_lance' },
+        { id: 'lingering_field', type: 'field', duration: 0.4, abilityId: 'decl_rime_wall' },
+        { id: 'scorch_residue', type: 'residue', duration: 0.5, abilityId: 'decl_cinder_bloom' },
+      ],
+    },
+  };
+
+  // Step 1: Validate through schema
+  const validation = validateSequenceDocument(jsonDoc);
+  assert.equal(validation.ok, true, 'sequence document with stage abilityIds must pass schema validation');
+
+  // Step 2: Ensure collectEmitAbilityIds and findUnresolvedEmitTargets capture stage abilityIds
+  const registry = new AbilityRegistry();
+  const unresolved = findUnresolvedEmitTargets(validation.definition!, registry.getIds());
+  assert.deepEqual(unresolved, [], 'all stage abilityIds must resolve against the registry');
+
+  // Step 3: Run through SequenceRuntime with recording emitter
+  const emitter = new RecordingEmitter();
+  const runtime = new SequenceRuntime(emitter);
+  runtime.load(validation.definition!);
+  runtime.start();
+
+  // Advance to strike_impact (0.2s)
+  runtime.advance(0.2);
+  assert.equal(emitter.events.length, 1);
+  assert.equal(emitter.events[0].abilityId, 'decl_ember_lance');
+  assert.equal(emitter.events[0].nodeId, 'strike_impact');
+  assert.ok(Math.abs(emitter.events[0].elapsed - 0.2) < 1e-9);
+
+  // Advance to lingering_field (0.2 + 0.3 = 0.5s)
+  runtime.advance(0.3);
+  assert.equal(emitter.events.length, 2);
+  assert.equal(emitter.events[1].abilityId, 'decl_rime_wall');
+  assert.equal(emitter.events[1].nodeId, 'lingering_field');
+  assert.ok(Math.abs(emitter.events[1].elapsed - 0.5) < 1e-9);
+
+  // Advance to scorch_residue (0.5 + 0.4 = 0.9s)
+  runtime.advance(0.4);
+  assert.equal(emitter.events.length, 3);
+  assert.equal(emitter.events[2].abilityId, 'decl_cinder_bloom');
+  assert.equal(emitter.events[2].nodeId, 'scorch_residue');
+  assert.ok(Math.abs(emitter.events[2].elapsed - 0.9) < 1e-9);
+
+  // Run to completion
+  runToCompletion(runtime);
+  assert.equal(runtime.getState().status, 'complete');
+  assert.ok(Math.abs(runtime.getState().elapsed - 1.4) < 1e-9);
+
+  // Cancellation and cleanup
+  runtime.restart();
+  assert.ok(emitter.cancels >= 1, 'restart must cancel previously emitted ownership');
+  runtime.stop();
+  assert.ok(emitter.cancels >= 2, 'stop must cancel emitted ownership');
+}
+
 checkSequenceOrdering();
 checkWaitTiming();
 checkParallelSemantics();
@@ -513,6 +628,9 @@ checkRestart();
 checkCancellation();
 checkShippedSequencePack();
 checkSequenceValidationRejections();
+checkDeclarativeStageAbilityIdValidation();
+checkDeclarativeResidueRuntimeEmission();
 checkNoWallClockTimers();
 
-console.log('Sequence runtime checks: PASS (ordering, parallel join all/any, wait, emit, travel, impact/field/residue, determinism, fixed-step, pause, restart, cancel, no wall-clock timers)');
+console.log('Sequence runtime checks: PASS (ordering, parallel join all/any, wait, emit, travel, impact/field/residue, determinism, fixed-step, pause, restart, cancel, no wall-clock timers, declarative stage abilityId validation and emission)');
+
