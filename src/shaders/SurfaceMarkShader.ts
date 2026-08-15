@@ -59,6 +59,12 @@ export const SurfaceMarkShader = {
         float glyphMask = step(0.5, sin(angle * 16.0 + uTime));
         finalColor = uColor * 1.8;
         alpha *= (ring1 + ring2 + glyphMask * 0.3 * ring1);
+      } else if (uMarkVariant == 4) {
+        float angle = atan(st.y, st.x);
+        float spiral = sin(angle * 4.0 - dist * 8.0 + uTime * 2.0);
+        float core = smoothstep(0.7, 0.1, dist + spiral * 0.15);
+        finalColor = mix(vec3(0.02, 0.0, 0.05), uColor * 1.5, core);
+        alpha *= core;
       }
       gl_FragColor = vec4(finalColor, clamp(alpha, 0.0, 1.0));
     }

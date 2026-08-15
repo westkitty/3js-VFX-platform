@@ -83,7 +83,7 @@ export class AbilityInstance {
       if (this.definition.feedback.flashIntensity > 0) this.postFX.triggerFlash('#ffffff', 150);
     }
     this.vfx.emitImpact(this.currentPosition, this.totalTime);
-    if (!this.preview) this.worldMarks.apply(this.definition, this.currentPosition, this.lastGlobalTime, this.id);
+    if (!this.preview) this.worldMarks.apply(this.definition, this.currentPosition, this.lastGlobalTime, this.id, this.request.surface?.surfaceId, this.request.surface?.normal);
     this.enterPhase('impact');
   }
 

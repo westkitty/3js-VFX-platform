@@ -13,6 +13,7 @@ export interface SurfaceHit {
   uv: THREE.Vector2 | null;
   object: THREE.Object3D | null;
   faceIndex?: number;
+  surfaceId?: string;
 }
 
 export type AbilityLifecyclePhase = 'windup' | 'travel' | 'impact' | 'hold' | 'fade' | 'done';

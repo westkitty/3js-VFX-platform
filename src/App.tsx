@@ -135,7 +135,9 @@ export default function App() {
       abilityMgr,
       sequenceRuntime,
       sequenceEmitter,
-      globalAbilityRegistry
+      sequenceDefinitions: sequenceLibrary.definitions,
+      globalAbilityRegistry,
+      postFX: engine.postFX,
     };
 
     let previewUiElapsed = 0;
@@ -256,7 +258,8 @@ export default function App() {
         const str = sculptMode === 'elevate' ? 0.8 : -0.8;
         terrainRef.current.sculptTerrain(hit.point, brushRadius, str);
       } else {
-        terrainRef.current.applyMutation(mutationType, hit.point, brushRadius);
+        const simTime = engineRef.current?.clock.getSimulationTime() ?? 0;
+        terrainRef.current.applyMutation(mutationType, hit.point, brushRadius, 1.0, simTime, 10.0, undefined, hit.surfaceId, hit.normal);
       }
       return;
     }
@@ -276,7 +279,7 @@ export default function App() {
         direction: dir,
         distance: dist,
         surface: hit,
-        seed: Math.random(),
+        seed: engineRef.current?.rng.next() ?? 0xa37e,
       },
       selectedAbility
     );
@@ -429,7 +432,13 @@ export default function App() {
             brushRadius={brushRadius}
             onChangeRadius={setBrushRadius}
             onUndo={() => terrainRef.current?.undo()}
+            onRedo={() => terrainRef.current?.redo()}
             onReset={() => terrainRef.current?.resetTerrain()}
+            onExportJson={() => terrainRef.current?.mutationManager.exportJson() ?? '{}'}
+            onImportJson={(json) => terrainRef.current?.mutationManager.importJson(json) ?? false}
+            activeMutationCount={terrainRef.current?.mutationManager.getActiveCount() ?? 0}
+            canUndo={terrainRef.current?.mutationManager.canUndo() ?? false}
+            canRedo={terrainRef.current?.mutationManager.canRedo() ?? false}
           />
         )}
         {currentMode === 'telegraphs' && (

@@ -74,11 +74,31 @@ export class SurfaceQuery {
     return this.createHit(first.point.clone(), normal, first.object, first.uv ?? null, first.faceIndex);
   }
 
+  public getSurfaceMesh(surfaceId: string): THREE.Object3D | null {
+    for (const mesh of this.playableMeshes) {
+      const id = this.resolveObjectId(mesh);
+      if (id === surfaceId) return mesh;
+    }
+    return null;
+  }
+
+  public resolveObjectId(object: THREE.Object3D | null): string {
+    if (!object) return 'surface_default';
+    if (typeof object.userData?.surfaceId === 'string' && object.userData.surfaceId.length > 0) {
+      return object.userData.surfaceId;
+    }
+    if (object.name && object.name.length > 0) {
+      return object.name;
+    }
+    return `surface_${object.id}`;
+  }
+
   private createHit(point: THREE.Vector3, normal: THREE.Vector3, object: THREE.Object3D | null, uv: THREE.Vector2 | null = null, faceIndex?: number): SurfaceHit {
     const frame = buildSurfaceFrameTuple([normal.x, normal.y, normal.z]);
     const norm = new THREE.Vector3(...frame.normal);
     const tangent = new THREE.Vector3(...frame.tangent);
     const bitangent = new THREE.Vector3(...frame.bitangent);
-    return { point, normal: norm, tangent, bitangent, uv, object, faceIndex };
+    const surfaceId = this.resolveObjectId(object);
+    return { point, normal: norm, tangent, bitangent, uv, object, faceIndex, surfaceId };
   }
 }

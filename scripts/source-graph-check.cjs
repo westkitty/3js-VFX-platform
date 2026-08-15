@@ -58,21 +58,23 @@ requireText('src/indicators/SurfaceIndicatorManager.ts', ['class SurfaceIndicato
 requireText('src/validation/SurfaceValidationFixture.ts', ['class SurfaceValidationFixture', 'SurfaceValidationRamp', 'SurfaceValidationStep']);
 requireText('src/validation/SurfaceRuntimeValidator.ts', ['runSurfaceRuntimeValidation', 'pointer-ramp', 'pointer-steps', 'indicator-conformance', 'freehand-steps']);
 requireText('src/App.tsx', ['SurfaceIndicatorManager', 'new FreehandCaster(engine.scene, engine.surfaceQuery)', 'indicatorMgr.update(dt)', 'surfaceAutoTest', '__AETHERVFX_SURFACE_VALIDATION__']);
-requireText('src/terrain/TerrainManager.ts', ['uMarkVariant']);
+// Phase 5: persistent aftermath, mutations, and terraforming architecture
+requireText('src/terrain/ResidueManager.ts', ['class ResidueManager', 'uMarkVariant', 'createVisual', 'removeVisual']);
+requireText('src/terrain/TerrainDemo.ts', ['class TerrainDemo', 'sculptTerrain', 'applyHeightDelta']);
+requireText('src/terrain/TerrainManager.ts', ['class TerrainManager', 'MutationManager', 'ResidueManager', 'TerrainDemo']);
+requireText('src/mutation/MutationTypes.ts', ['MUTATION_SCHEMA_CURRENT_VERSION', 'MutationRecord', 'MutationDocument']);
+requireText('src/mutation/MutationManager.ts', ['class MutationManager', 'beginTransaction', 'applyMutation', 'undo', 'redo', 'exportJson', 'importJson']);
+requireText('src/schema/MutationSchema.ts', ['MUTATION_TYPES', 'MUTATION_RECORD_SCHEMA', 'MUTATION_DOCUMENT_SCHEMA_V1_0']);
+requireText('src/schema/MutationValidator.ts', ['validateMutationDocument', 'parseMutationJson']);
 
-// Phase 4: declarative ability schema and semantic sequence runtime.
-requireText('src/schema/AbilitySchema.ts', ['ABILITY_SCHEMA_CURRENT_VERSION', 'ABILITY_SCHEMA_SUPPORTED_VERSIONS', 'additionalProperties']);
-requireText('src/schema/AbilityValidator.ts', ['validateAbilityDocument', 'validateAbilityDefinition', 'unsupportedVersion', 'migrateV1_0ToV1_1']);
-requireText('src/schema/SequenceSchema.ts', ['SEQUENCE_SCHEMA_V1_0', 'additionalProperties']);
-requireText('src/schema/SequenceValidator.ts', ['validateSequenceDocument', 'findUnresolvedEmitTargets']);
-requireText('src/abilities/AbilityRegistry.ts', ['registerDocument', 'DuplicateIdPolicy', 'validateAbilityDefinition', 'getLoadIssues']);
-requireText('src/abilities/declarative/index.ts', ['DECLARATIVE_ABILITY_PACK']);
-requireText('src/sequence/SequenceModel.ts', ['SEQUENCE_NODE_TYPES', 'leafDuration', 'nodeDuration']);
-requireText('src/sequence/SequenceRuntime.ts', ['class SequenceRuntime', 'advance(', 'restart(', 'stop(']);
-requireText('src/sequence/AbilitySequenceEmitter.ts', ['class AbilitySequenceEmitter', 'cancelAll(']);
-requireText('src/components/PresetBuilderPanel.tsx', ['validateAbilityDefinition', 'factory-register', 'factory-import', 'factory-issues']);
-requireText('src/components/SequenceLabPanel.tsx', ['sequence-run', 'sequence-restart', 'sequence-stop', 'sequence-nodes']);
-requireText('src/App.tsx', ['SequenceRuntime', 'sequenceRuntime.advance(dt)']);
+// MutationManager and sequence runtime must never own wall-clock timing or unseeded randomness.
+const mutationManagerText = fs.readFileSync(path.join(root, 'src/mutation/MutationManager.ts'), 'utf8');
+for (const forbidden of ['setTimeout(', 'setInterval(', 'Date.now(', 'performance.now(', 'requestAnimationFrame(', 'Math.random(']) {
+  if (mutationManagerText.includes(forbidden)) {
+    console.error(`src/mutation/MutationManager.ts must not use ${forbidden}; pure deterministic state`);
+    process.exit(1);
+  }
+}
 
 // The sequence runtime must never own wall-clock timing.
 const sequenceRuntimeText = fs.readFileSync(path.join(root, 'src/sequence/SequenceRuntime.ts'), 'utf8');
