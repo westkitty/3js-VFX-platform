@@ -1,7 +1,7 @@
 # Operational State: AetherVFX
 
 <!-- operational-state:metadata
-{"schema_version":1,"project_id":"aethervfx","project_name":"AetherVFX Ability and Procedural VFX Engine","project_root":".","artifact_path":"","state_revision":15,"last_updated":"2026-08-14T00:59:00Z","current_baseline":{"identity":"remote source checkpoint 5b030d7bddb2c772104080a4ce5785e389473c5f; current container has no durable local clone; later documentation commits do not change source identity","state":"current-baseline","last_verified":"2026-08-14T00:59:00Z"},"scope_boundaries":["westkitty/3js-VFX-platform"],"linked_parent_state":null}
+{"schema_version":1,"project_id":"aethervfx","project_name":"AetherVFX Ability and Procedural VFX Engine","project_root":".","artifact_path":"","state_revision":16,"last_updated":"2026-08-15T01:20:00Z","current_baseline":{"identity":"fresh durable local clone of origin/main at 5b030d7bddb2c772104080a4ce5785e389473c5f (HEAD c4bcafb); repaired by deleting orphaned src/vfx/runtime/ShockwaveRuntimeModule.ts, then dependency-resolved install/typecheck/checks/build and a real-browser ?surfaceAutoTest=1 run were completed against this clone before committing","state":"current-baseline","last_verified":"2026-08-15T01:20:00Z"},"scope_boundaries":["westkitty/3js-VFX-platform"],"linked_parent_state":null}
 -->
 
 ## 1. Project Identity and Scope
@@ -12,10 +12,11 @@
 
 ## 2. Current Baseline
 
-- Remote Phase 3 validation-support source checkpoint: `5b030d7bddb2c772104080a4ce5785e389473c5f`.
-- The previous local working directory was lost when the execution container recycled; GitHub is the durable source of truth for this checkpoint.
-- `surfaceAutoTest=1` now enables the validation fixture and runs an in-app Three.js runtime validator, exposes `window.__AETHERVFX_SURFACE_VALIDATION__`, and renders a visible PASS/FAIL overlay.
-- Phase 3 remains browser-unverified until that route runs in an unrestricted browser and returns PASS. Phase 4 remains gated.
+- Remote Phase 3 validation-support source checkpoint: `5b030d7bddb2c772104080a4ce5785e389473c5f` (HEAD `c4bcafb` at clone time).
+- A fresh durable local clone of `origin/main` was made for this revision. `npm install`, `tsc --noEmit`, all four `check:*` scripts, and `vite build` were run against it.
+- One pre-existing defect was found and repaired: `src/vfx/runtime/ShockwaveRuntimeModule.ts` was dead/orphaned source importing a `ShockRing` class that no longer exists (renamed to `PulseRing`); it was never registered in `VfxModuleRegistry` (which wires the `shockwave` type to `PulseRuntimeModule`) and was not reachable from any import graph. It broke `tsc --noEmit`, and `scripts/source-graph-check.cjs` already treats the `ShockRing` name as a stale-path pattern. The file was deleted; no other source changed.
+- `surfaceAutoTest=1` enables the validation fixture and runs an in-app Three.js runtime validator, exposes `window.__AETHERVFX_SURFACE_VALIDATION__`, and renders a visible PASS/FAIL overlay.
+- **Phase 3 browser surface validation is now VERIFIED.** The route was run in a real Chromium browser against a local Vite dev server and returned `passed: true` on all 12 checks, with the visible "Surface runtime validation: PASS" overlay confirmed. See VER-008. Phase 4 is now unlocked per DEC-001/PND-002, but Phase 4 work was explicitly not started in this revision.
 
 ## 3. Artifact Contract
 
@@ -88,12 +89,33 @@
 {"id":"VER-007","title":"Opt-in Three.js surface runtime validator published","state":"verified","capability":"The app contains an opt-in runtime route that uses the real Engine, SurfaceQuery, WebGLRenderer, SurfaceIndicatorManager, validation ramp/steps, and FreehandCaster to produce a machine-readable and visible PASS/FAIL report.","scope":"Phase 3 validation-support source","verification_method":"TypeScript syntax transpile for changed TS/TSX, GitHub compare/fetch, bounded three-file remote diff","evidence":"remote source checkpoint 5b030d7bddb2c772104080a4ce5785e389473c5f; changed files: SurfaceRuntimeValidator.ts, App.tsx, source-graph-check.cjs","artifact_revision":"5b030d7bddb2c772104080a4ce5785e389473c5f","last_verified":"2026-08-14T00:59:00Z","dependencies":"GitHub connector; runtime execution still requires an unrestricted browser","freshness":"current source checkpoint","recheck_trigger":"Runtime validator, fixture, App validation wiring, surface input, indicator, freehand, or renderer change"}
 -->
 ### VER-007 — Opt-in Three.js surface runtime validator published
-- **State:** `verified` — source route published at `5b030d7b`; runtime PASS is not yet claimed.
+- **State:** `verified` — source route published at `5b030d7b`; runtime PASS is now claimed and evidenced below (VER-008).
+<!-- /operational-state:entry -->
+
+<!-- operational-state:entry
+{"id":"VER-008","title":"Phase 3 browser surface runtime validation PASS","state":"verified","capability":"Real Engine/SurfaceQuery/WebGLRenderer/SurfaceIndicatorManager/FreehandCaster executed in a live Chromium browser against a local Vite dev server (localhost:3001) via the ?surfaceAutoTest=1 route; window.__AETHERVFX_SURFACE_VALIDATION__.passed === true with 12/12 checks passing, and the visible \"Surface runtime validation: PASS\" overlay was confirmed on the rendered page.","scope":"Phase 3 validation-support runtime","verification_method":"Interactive browser execution (Claude Browser tool) after npm install/typecheck/checks/build all passed","evidence":"report generatedAt=2026-08-15T01:17:14.074Z; checks: webgl-context PASS, fixture-shape PASS(ramp=true steps=4), ramp-hit PASS, ramp-normal PASS(dot=1.000000), pointer-ramp PASS, step-hits PASS(4/4), pointer-steps PASS(4/4), no-phantom-floor PASS, indicator-conformance PASS(placements=10 maxDistance=0.0350), indicator-lifecycle PASS(10 placements), freehand-steps PASS(points=51 maxDistance=0.0000 yRange=1.950), freehand-cleanup PASS(children 23->23; geometries 6->7->6); zero console errors","artifact_revision":"local clone at c4bcafb plus deletion of ShockwaveRuntimeModule.ts","dependencies":"dependency-resolved Node/npm environment and an unrestricted browser, both now available (resolves UNK-001)","freshness":"current","recheck_trigger":"Runtime validator, fixture, App validation wiring, surface input, indicator, freehand, or renderer change"}
+-->
+### VER-008 — Phase 3 browser surface runtime validation PASS
+- **State:** `verified` — real-browser `?surfaceAutoTest=1` run returned `passed: true`, 12/12 checks, visible PASS overlay confirmed, zero console errors.
+<!-- /operational-state:entry -->
+
+<!-- operational-state:entry
+{"id":"VER-009","title":"Phase 2 regression smoke PASS","state":"verified","capability":"VFX Lab preview cast, pause, single-frame step while paused, seek/scrub, restart, and live parameter edit all confirmed on the default route (no query flags), with the seven-mode workbench shell intact.","scope":"Phase 2 live VFX preview/editor","verification_method":"Interactive browser smoke test on http://localhost:3001/ after the surface runtime validator passed","evidence":"Preview: 'Amber Orb' cast, timeline advanced (0.25/1.55s -> impact); Pause: button changed to Resume, timeline froze at 0.55/1.55s * hold; Step: advanced paused timeline to 0.6167s; Seek: scrubbing to 1.20s changed phase label hold->fade, confirming actual state change not just a slider redraw; Restart: reset to 0.00/1.55s * windup; Parameter edit: Orb radius 0.8->3 applied immediately under 'Runtime bound' label; zero console errors observed throughout","dependencies":"local dev server","freshness":"current","recheck_trigger":"Preview/editor change"}
+-->
+### VER-009 — Phase 2 regression smoke PASS
+- **State:** `verified` — preview/pause/step/seek/restart/live-param-edit all confirmed working with no console errors.
+<!-- /operational-state:entry -->
+
+<!-- operational-state:entry
+{"id":"VER-010","title":"Dependency-resolved install/typecheck/checks/build PASS","state":"verified","capability":"npm install, tsc --noEmit, all four check:* scripts, and vite build all succeed against a fresh local clone.","scope":"Full dependency-resolved toolchain","verification_method":"npm run lint; npm run check:runtime-spine; npm run check:indicator-model; npm run check:surface-frame; npm run check:source-graph; npm run build","evidence":"npm install: 221 packages added, 0 vulnerabilities; tsc --noEmit: clean after deleting orphaned ShockwaveRuntimeModule.ts; check:runtime-spine PASS; check:indicator-model PASS (5 shapes, clamping, deterministic phase timing); check:surface-frame PASS (horizontal, slope, vertical, degenerate direction, handedness); check:source-graph PASS (66 source files); vite build succeeded, dist/ produced (820.30 kB main bundle, chunk-size warning only, not a failure)","dependencies":"local Node/npm environment (resolves UNK-001)","freshness":"current","recheck_trigger":"Dependency, build tooling, or source-graph change"}
+-->
+### VER-010 — Dependency-resolved install/typecheck/checks/build PASS
+- **State:** `verified` — install, typecheck, all four repo checks, and production build all pass on a fresh clone.
 <!-- /operational-state:entry -->
 
 ## 6. Known Not Working
 
-No active source-confirmed Phase 1-3 defect is recorded. The remaining browser acceptance gate is unverified, not inferred fixed.
+No active source-confirmed Phase 1-3 defect is recorded. `src/vfx/runtime/ShockwaveRuntimeModule.ts` (orphaned dead file, unreachable from any import graph, referencing a since-renamed `ShockRing` class) previously broke `tsc --noEmit`; it was deleted in revision 16 (see VER-010). The browser acceptance gate that remained open through revision 15 is now closed — see VER-008.
 
 ## 7. Implemented but Unverified
 
@@ -119,40 +141,40 @@ No active source-confirmed Phase 1-3 defect is recorded. The remaining browser a
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"UNV-005","title":"Resource cleanup paths","state":"implemented-unverified","capability":"VFX, ability, terrain, indicator, fixture, and teardown cleanup paths exist; the new runtime validator checks freehand scene/GPU geometry recovery when executed.","evidence":"Source plus VfxPool checks and VER-007 route","validation_method":"Run surfaceAutoTest route plus repeated browser lifecycle with renderer.info","recheck_trigger":"Ownership/disposal change"}
+{"id":"UNV-005","title":"Resource cleanup paths","state":"partially-verified","capability":"VFX, ability, terrain, indicator, fixture, and teardown cleanup paths exist; the runtime validator checks freehand scene/GPU geometry recovery and indicator lifecycle cleanup.","evidence":"VER-008: freehand-cleanup PASS (children 23->23; geometries 6->7->6), indicator-lifecycle PASS (10 placements, all removed)","validation_method":"Ran surfaceAutoTest route once; single-pass lifecycle confirmed, repeated-cycle/renderer.info stress soak not yet performed","recheck_trigger":"Ownership/disposal change"}
 -->
 ### UNV-005 — Resource cleanup paths
-- **State:** `implemented-unverified` — runtime validator can now exercise freehand geometry recovery, but has not yet run in an unrestricted browser.
+- **State:** `partially-verified` — single-pass freehand and indicator cleanup confirmed via VER-008; a repeated-cycle stress soak remains unverified.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"UNV-006","title":"Live VFX preview/editor","state":"implemented-unverified","capability":"Deterministic preview, live module edits, seek/restart, and fixed-step controls are implemented.","evidence":"Phase 2 source checkpoint","validation_method":"Browser preview/edit/replay test","recheck_trigger":"Preview/editor change"}
+{"id":"UNV-006","title":"Live VFX preview/editor","state":"verified","capability":"Deterministic preview, live module edits, seek/restart, and fixed-step controls are implemented and confirmed working.","evidence":"VER-009 Phase 2 regression smoke PASS","validation_method":"Browser preview/edit/replay test","recheck_trigger":"Preview/editor change"}
 -->
 ### UNV-006 — Live VFX preview/editor
-- **State:** `implemented-unverified` — needs browser preview/edit/replay proof.
+- **State:** `verified` — see VER-009.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"UNV-007","title":"Surface-aware freehand and indicators","state":"implemented-unverified","capability":"Local-normal projection, freehand reprojection, five indicator shapes, pointer raycast checks, timing, and cleanup validation are implemented; pure contracts are verified and a real-runtime auto-test route is published.","evidence":"Phase 3 source, fixture, VER-005, VER-006, VER-007","validation_method":"Open the app with ?surfaceAutoTest=1 and require window.__AETHERVFX_SURFACE_VALIDATION__.passed === true plus the visible PASS overlay","recheck_trigger":"Surface/freehand/indicator/input/validator change"}
+{"id":"UNV-007","title":"Surface-aware freehand and indicators","state":"verified","capability":"Local-normal projection, freehand reprojection, five indicator shapes, pointer raycast checks, timing, and cleanup validation are implemented and confirmed in a real browser runtime.","evidence":"Phase 3 source, fixture, VER-005, VER-006, VER-007, VER-008","validation_method":"Opened the app with ?surfaceAutoTest=1; window.__AETHERVFX_SURFACE_VALIDATION__.passed === true (12/12) plus the visible PASS overlay, both confirmed","recheck_trigger":"Surface/freehand/indicator/input/validator change"}
 -->
 ### UNV-007 — Surface-aware freehand and indicators
-- **State:** `implemented-unverified` — decisive route is now `?surfaceAutoTest=1`; source existence alone does not close it.
+- **State:** `verified` — decisive `?surfaceAutoTest=1` route run and confirmed PASS; see VER-008.
 <!-- /operational-state:entry -->
 
 ## 8. Unknown or Evidence-Stale State
 
 <!-- operational-state:entry
-{"id":"UNK-001","title":"Dependency-resolved runtime unverified","state":"unknown","decisive_check":"Run install/typecheck/build and then open ?surfaceAutoTest=1 in an unrestricted browser; require runtime report PASS and perform the Phase 2 preview smoke.","evidence":"Current container has Chromium and global TypeScript but no project node_modules. Machine Chromium policy sets URLBlocklist=[*], blocking file:// and localhost navigation with ERR_BLOCKED_BY_ADMINISTRATOR; outbound sockets/package/CDN access are also unavailable.","last_checked":"revision 15"}
+{"id":"UNK-001","title":"Dependency-resolved runtime unverified","state":"resolved","decisive_check":"Run install/typecheck/build and then open ?surfaceAutoTest=1 in an unrestricted browser; require runtime report PASS and perform the Phase 2 preview smoke.","evidence":"Revision 16: this environment had normal outbound network/package access and an unrestricted browser. See VER-008, VER-009, VER-010.","last_checked":"revision 16"}
 -->
 ### UNK-001 — Dependency-resolved runtime unverified
-- **State:** `unknown` — the current execution environment cannot perform the decisive browser load without bypassing platform policy, which is prohibited.
+- **State:** `resolved` — a normal dependency-resolved/unrestricted-browser environment was available in revision 16; see VER-008/VER-009/VER-010.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"UNK-002","title":"Exact local/remote parity unverified","state":"unknown","decisive_check":"Fresh-clone remote and compare intended paths/hashes after connector-orphan cleanup.","evidence":"The prior local clone was lost on container recycle; connector publication also produced historical local/remote divergence.","last_checked":"revision 15"}
+{"id":"UNK-002","title":"Exact local/remote parity unverified","state":"partially-resolved","decisive_check":"Fresh-clone remote and compare intended paths/hashes after connector-orphan cleanup.","evidence":"A fresh clone of origin/main (c4bcafb) was made in revision 16 and matched remote exactly prior to the local repair described in VER-010. Ongoing parity after this revision's push is established by the push itself, not independently re-verified.","last_checked":"revision 16"}
 -->
 ### UNK-002 — Exact local/remote parity unverified
-- **State:** `unknown` — GitHub is the current durable source; fresh-clone parity remains the decisive check.
+- **State:** `partially-resolved` — a fresh clone matched remote exactly before this revision's repair commit; PND-001 connector-orphan cleanup remains open.
 <!-- /operational-state:entry -->
 
 ## 9. Pending Work
@@ -165,17 +187,17 @@ No active source-confirmed Phase 1-3 defect is recorded. The remaining browser a
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"PND-002","title":"Phase 3 browser surface validation","state":"pending","task":"Open ?surfaceAutoTest=1 in an unrestricted browser and require the runtime report to PASS; then smoke the Phase 2 VFX preview/edit/replay path.","reason_pending":"The current container's managed Chromium blocks all navigation and outbound sockets; bypassing that platform policy is out of scope.","dependency":"Normal dependency-resolved browser environment","priority":"next","validation_needed":"WebGL context, ramp/step SurfaceQuery hits, camera-NDC pointer hits, no phantom floor, ten indicator placements across ramp+step, warning/commit/fade cleanup, freehand traversal across four step heights, scene/GPU geometry recovery, Phase 2 smoke","blocks_completion":true}
+{"id":"PND-002","title":"Phase 3 browser surface validation","state":"resolved","task":"Open ?surfaceAutoTest=1 in an unrestricted browser and require the runtime report to PASS; then smoke the Phase 2 VFX preview/edit/replay path.","reason_pending":"Resolved in revision 16 — see VER-008 (runtime PASS) and VER-009 (Phase 2 smoke PASS).","dependency":"Normal dependency-resolved browser environment","priority":"done","validation_needed":"WebGL context, ramp/step SurfaceQuery hits, camera-NDC pointer hits, no phantom floor, ten indicator placements across ramp+step, warning/commit/fade cleanup, freehand traversal across four step heights, scene/GPU geometry recovery, Phase 2 smoke — all confirmed","blocks_completion":false}
 -->
 ### PND-002 — Phase 3 browser surface validation
-- **State:** `pending` — **next and blocking Phase 3 completion**. Run `?surfaceAutoTest=1`; PASS must be observed, not assumed.
+- **State:** `resolved` — `?surfaceAutoTest=1` returned PASS (12/12) with the visible overlay confirmed; Phase 2 smoke also passed. See VER-008, VER-009.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"PND-003","title":"Phase 4 factory/sequence runtime","state":"pending","task":"Implement schema-validated Ability Factory and semantic sequence nodes.","reason_pending":"Phase 3 browser gate is open.","dependency":"PND-002","priority":"later","validation_needed":"Ten declarative abilities plus node tests","blocks_completion":false}
+{"id":"PND-003","title":"Phase 4 factory/sequence runtime","state":"pending","task":"Implement schema-validated Ability Factory and semantic sequence nodes.","reason_pending":"Unlocked as of revision 16 (PND-002 resolved) but intentionally not started in this revision, per explicit instruction to stop at Phase 3 validation.","dependency":"PND-002 (resolved)","priority":"later","validation_needed":"Ten declarative abilities plus node tests","blocks_completion":false}
 -->
 ### PND-003 — Phase 4 factory/sequence runtime
-- **State:** `pending` — blocked by PND-002.
+- **State:** `pending` — unlocked (PND-002 resolved) but explicitly not started in revision 16.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
@@ -188,30 +210,33 @@ No active source-confirmed Phase 1-3 defect is recorded. The remaining browser a
 ## 10. Active Decisions, Defaults, and Prohibitions
 
 <!-- operational-state:entry
-{"id":"DEC-001","title":"Assessment controls development order","state":"requested","rule":"Make existing modes truthful before breadth; follow ROADMAP.md; do not enter Phase 4 before PND-002 is resolved or explicitly accepted as a blocker.","scope":"All AetherVFX work","authority":"Explicit user confirmation","evidence":"Accepted assessment and ROADMAP.md","validation_method":"Map each checkpoint to the roadmap gate","last_checked":"revision 15","status":"active","recheck_trigger":"Explicit user direction change"}
+{"id":"DEC-001","title":"Assessment controls development order","state":"requested","rule":"Make existing modes truthful before breadth; follow ROADMAP.md; do not enter Phase 4 before PND-002 is resolved or explicitly accepted as a blocker.","scope":"All AetherVFX work","authority":"Explicit user confirmation","evidence":"Accepted assessment and ROADMAP.md; PND-002 resolved in revision 16 (VER-008, VER-009)","validation_method":"Map each checkpoint to the roadmap gate","last_checked":"revision 16","status":"active","recheck_trigger":"Explicit user direction change"}
 -->
 ### DEC-001 — Assessment controls development order
-- **State:** `requested` — Phase 4 waits on PND-002.
+- **State:** `requested` — PND-002 is resolved, so Phase 4 is unlocked; it was explicitly not started in revision 16.
 <!-- /operational-state:entry -->
 
 ## 11. Validation and Evidence Matrix
 
 | ID | State | Evidence | Decisive validation |
 |---|---|---|---|
+| VER-008 | verified real-browser runtime | local clone; `?surfaceAutoTest=1`; 12/12 checks PASS; visible overlay confirmed | rerun `?surfaceAutoTest=1` after any surface/indicator/freehand/validator change |
+| VER-009 | verified real-browser smoke | preview/pause/step/seek/restart/param-edit all confirmed on default route | rerun Phase 2 smoke after any preview/editor change |
+| VER-010 | verified toolchain | install/typecheck/4 checks/build all PASS on fresh clone | rerun after dependency or build tooling change |
 | VER-007 | verified source route | remote `5b030d7b`; bounded 3-file diff; changed-file syntax pass | re-fetch runtime validator/App wiring |
 | VER-006 | verified pure model | remote `961f39e5`; surface-frame/model/source/syntax PASS | rerun pure/source checks |
 | VER-005 | verified pure model | remote `6f652628`; indicator-model checks | rerun indicator-model/source checks |
-| UNV-006 | implemented-unverified | Phase 2 source | browser preview/edit/replay |
-| UNV-007 | implemented-unverified | Phase 3 + fixture + pure contracts + runtime auto-test source | `?surfaceAutoTest=1` report PASS |
-| UNK-001 | unknown | current browser/package environment blocked | unrestricted install/build/browser smoke |
-| UNK-002 | unknown | local clone lost; connector-shaped history | fresh-clone parity |
+| UNV-006 | verified | VER-009 | browser preview/edit/replay — done |
+| UNV-007 | verified | VER-008 | `?surfaceAutoTest=1` report PASS — done |
+| UNK-001 | resolved | VER-008/009/010 | unrestricted install/build/browser smoke — done |
+| UNK-002 | partially-resolved | fresh clone matched remote before repair commit | ongoing parity re-check after future divergence |
 
 ## 12. Current Change Scope and Impact Radius
 
-- **Allowed next:** execute the published Phase 3 runtime validator in a normal browser and make only evidence-driven Phase 3 repairs.
-- **Protected:** Phase 1 timing/shake/resources; Phase 2 preview semantics; Phase 3 projection/frame contracts; seven-mode shell; default route without validation query flags.
-- **Mandatory checks after any repair:** indicator model, surface frame, source graph, TS/TSX syntax/typecheck/build when available, `?surfaceAutoTest=1` runtime report, Phase 2 preview smoke, remote source verification.
-- **Stop:** no Phase 4 before PND-002 is resolved or explicitly accepted as a blocker.
+- **Allowed next:** Phase 4 is unlocked (PND-002 resolved) but was not started in revision 16. Any future work should follow ROADMAP.md and PND-003.
+- **Protected:** Phase 1 timing/shake/resources; Phase 2 preview semantics (re-confirmed by VER-009); Phase 3 projection/frame contracts; seven-mode shell (re-confirmed visible in revision 16 smoke test); default route without validation query flags (re-confirmed it does not run the validator).
+- **Mandatory checks after any repair:** indicator model, surface frame, source graph, TS/TSX syntax/typecheck/build, `?surfaceAutoTest=1` runtime report, Phase 2 preview smoke, remote source verification — all run and passing as of revision 16.
+- **Stop:** Phase 4 was intentionally not started in this revision, per explicit instruction, even though it is now unlocked.
 
 ## 13. Compact Revision Log
 
@@ -227,3 +252,4 @@ No active source-confirmed Phase 1-3 defect is recorded. The remaining browser a
 | 12-13 | Indicator geometry/timing model extracted, validated, and published. |
 | 14 | Shared surface-frame model extracted, handedness unified, orientation checks added, source published at `961f39e5`. |
 | 15 | Published `surfaceAutoTest=1` real-runtime validator and machine-readable/visible report at source checkpoint `5b030d7b`; decisive browser execution remains pending. |
+| 16 | Fresh clone; deleted orphaned `ShockwaveRuntimeModule.ts` (stale `ShockRing` reference, unreachable dead code) fixing `tsc --noEmit`; ran install/typecheck/4 checks/build all PASS; ran real-browser `?surfaceAutoTest=1` — 12/12 PASS with visible overlay; ran Phase 2 regression smoke — PASS. PND-002 resolved. Phase 4 unlocked, not started. |
