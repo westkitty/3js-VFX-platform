@@ -17,7 +17,7 @@ export class AbilityPreviewController {
 
   public replace(request: AbilityRequest, definition: AbilityDefinition): AbilityInstance {
     if (this.instance) {
-      this.instance.destroy();
+      this.instance.cancel();
       this.collection.remove(this.instance);
     }
     this.instance = new AbilityInstance(this.scene, this.terrain, this.postFX, request, definition, { preview: true });
@@ -36,5 +36,8 @@ export class AbilityPreviewController {
     if (!this.instance) return { hasPreview: false, time: 0, duration: 0, phase: 'done' };
     return { hasPreview: true, time: this.instance.totalTime, duration: this.instance.getDuration(), phase: this.instance.phase };
   }
-  public clear(): void { this.instance = null; }
+  public clear(): void {
+    if (this.instance) this.instance.cancel();
+    this.instance = null;
+  }
 }

@@ -103,7 +103,9 @@ export interface TerrainMutationRegion {
   shape: 'circle' | 'ribbon' | 'path';
   points?: THREE.Vector3[];
   createdAt: number;
-  duration?: number;
+  duration: number;
+  ownerId?: string;
+  meshes: THREE.Mesh[];
 }
 
 export type TelegraphState = 'reveal' | 'warning' | 'commit' | 'impact' | 'clear';

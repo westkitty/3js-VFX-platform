@@ -20,6 +20,7 @@ export class AbilityInstance {
   public phase: AbilityLifecyclePhase = 'windup';
   public phaseTime = 0;
   public totalTime = 0;
+  private lastGlobalTime = 0;
   private currentPosition: THREE.Vector3;
   private travelProgress = 0;
   private destroyed = false;
@@ -47,6 +48,7 @@ export class AbilityInstance {
 
   public update(dt: number, _globalTime: number): boolean {
     if (this.destroyed) return true;
+    this.lastGlobalTime = _globalTime;
     const safeDt = Math.max(0, dt);
     this.phaseTime += safeDt; this.totalTime += safeDt; this.vfx.update(safeDt, this.totalTime);
     switch (this.phase) {
@@ -81,7 +83,7 @@ export class AbilityInstance {
       if (this.definition.feedback.flashIntensity > 0) this.postFX.triggerFlash('#ffffff', 150);
     }
     this.vfx.emitImpact(this.currentPosition, this.totalTime);
-    if (!this.preview) this.worldMarks.apply(this.definition, this.currentPosition);
+    if (!this.preview) this.worldMarks.apply(this.definition, this.currentPosition, this.lastGlobalTime, this.id);
     this.enterPhase('impact');
   }
 
@@ -106,4 +108,8 @@ export class AbilityInstance {
   public getParticleCount(): number { return this.vfx.getParticleCount(); }
   public isPreviewInstance(): boolean { return this.preview; }
   public destroy(): void { if (this.destroyed) return; this.destroyed = true; this.vfx.destroy(); }
+  public cancel(): void {
+    if (!this.preview) this.worldMarks.clear(this.id);
+    this.destroy();
+  }
 }

@@ -58,6 +58,8 @@ export interface SequenceTravelNode extends SequenceNodeBase {
 export interface SequenceStageNode extends SequenceNodeBase {
   type: 'impact' | 'field' | 'residue';
   duration: number;
+  /** Optional registry id to spawn a persistent world effect or field when entering this stage. */
+  abilityId?: string;
 }
 
 export type SequenceNode =
@@ -133,7 +135,9 @@ export function flattenNodes(node: SequenceNode, depth = 0): Array<{ node: Seque
 export function collectEmitAbilityIds(node: SequenceNode): string[] {
   const ids = new Set<string>();
   for (const entry of flattenNodes(node)) {
-    if (entry.node.type === 'emit') ids.add(entry.node.abilityId);
+    if ('abilityId' in entry.node && typeof entry.node.abilityId === 'string') {
+      ids.add(entry.node.abilityId);
+    }
   }
   return Array.from(ids);
 }

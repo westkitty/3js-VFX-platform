@@ -1,7 +1,7 @@
 # Operational State: AetherVFX
 
 <!-- operational-state:metadata
-{"schema_version":1,"project_id":"aethervfx","project_name":"AetherVFX Ability and Procedural VFX Engine","project_root":".","artifact_path":"","state_revision":17,"last_updated":"2026-08-15T14:45:00Z","current_baseline":{"identity":"local clone of origin/main at 4704efd158f237b459d7b2008f06d743f74270c5 plus the Phase 4 declarative ability and semantic sequence runtime; dependency-resolved install/typecheck/six checks/build and full browser acceptance were completed against this tree before committing","state":"current-baseline","last_verified":"2026-08-15T14:45:00Z"},"scope_boundaries":["westkitty/3js-VFX-platform"],"linked_parent_state":null}
+{"schema_version":1,"project_id":"aethervfx","project_name":"AetherVFX Ability and Procedural VFX Engine","project_root":".","artifact_path":"","state_revision":18,"last_updated":"2026-08-15T16:51:00Z","current_baseline":{"identity":"local clone of origin/main plus Phase 5 world-effect / aftermath-residue layer","state":"current-baseline","last_verified":"2026-08-15T16:51:00Z"},"scope_boundaries":["westkitty/3js-VFX-platform"],"linked_parent_state":null}
 -->
 
 ## 1. Project Identity and Scope
@@ -14,10 +14,10 @@
 
 - Phase 3 verified checkpoint: `4704efd158f237b459d7b2008f06d743f74270c5`.
 - Revision 17 implements Phase 4 on top of it: a versioned Ajv-validated declarative ability schema, a hardened registry, a real Ability Factory, ten data-only abilities, and a deterministic semantic sequence runtime with a working Sequence Designer.
-- `surfaceAutoTest=1` still enables the validation fixture and runs the in-app Three.js runtime validator, exposes `window.__AETHERVFX_SURFACE_VALIDATION__`, and renders a visible PASS/FAIL overlay. It was re-run on the Phase 4 tree and still returns 12/12.
-- **Phase 3 browser surface validation remains VERIFIED** (VER-008) and was re-confirmed against Phase 4 source (VER-014).
-- **Phase 4 is COMPLETE and browser-verified** (VER-011 … VER-013). Phase 5 was not started.
-- One shared compiler-config change was required: `resolveJsonModule` was enabled so the data-only ability/sequence packs can be real `.json` files. Note that this project compiles **without** `strictNullChecks`, so discriminated-union narrowing does not apply; Phase 4 validation results are therefore flat result objects (`ok` + nullable payload + `issues`) rather than discriminated unions. Enabling `strictNullChecks` was deliberately not attempted, as it would cascade into protected Phase 1-3 code.
+- Revision 18 implements Phase 5: World-Effect / Aftermath-Residue Layer. Abilities leave controlled, deterministic world marks (decals, crystals) that are subject to strict durations, budgets, and cleanup lifecycles, surviving their initial casting phase but tied to sequence interruptions.
+- `surfaceAutoTest=1` still enables the validation fixture and runs the in-app Three.js runtime validator, exposes `window.__AETHERVFX_SURFACE_VALIDATION__`, and renders a visible PASS/FAIL overlay. It was re-run on the Phase 5 tree and still returns 12/12.
+- **Phase 3 browser surface validation remains VERIFIED** (VER-008) and was re-confirmed against Phase 5 source.
+- **Phase 5 is COMPLETE and browser-verified** (VER-015). Phase 6 was not started.
 
 ## 3. Artifact Contract
 
@@ -263,13 +263,14 @@ No active source-confirmed Phase 1-3 defect is recorded. `src/vfx/runtime/Shockw
 | VER-012 | verified pure + browser | `check:sequence-runtime` PASS; browser run/pause/restart/stop proof | rerun after sequence model/runtime change |
 | VER-013 | verified real browser | Factory 11/11 and Sequence 8/8 steps; channel-isolated render proof | rerun after Factory/Sequence UI or App wiring change |
 | VER-014 | verified regression | 12/12 surface validator, Phase 2 smoke, 7 modes, build | rerun after any Phase 1-3 surface change |
+| VER-015 | verified pure + browser | `check:ability-schema` PASS; browser runs prove decals persist for their duration and fade out. Sequence cancels clean up owned residues immediately. | rerun after TerrainManager, WorldMarkBridge, or decal schema changes |
 
 ## 12. Current Change Scope and Impact Radius
 
-- **Allowed next:** Phase 5 per ROADMAP.md. It was explicitly **not** started in revision 17.
+- **Allowed next:** Phase 6 per ROADMAP.md. It was explicitly **not** started in revision 18.
 - **Protected:** Phase 1 timing/shake/resources; Phase 2 preview semantics (re-confirmed by VER-014); Phase 3 projection/frame contracts and the 12-check surface validator (re-confirmed by VER-014); seven-mode shell (re-confirmed); default route without validation query flags; EngineClock as sole simulation-time owner (now also relied on by the sequence runtime).
-- **Mandatory checks after any repair:** lint/typecheck, runtime-spine, indicator-model, surface-frame, source-graph, ability-schema, sequence-runtime, production build, `?surfaceAutoTest=1` runtime report, Phase 2 preview smoke, Phase 4 Factory/Sequence browser proofs — all run and passing as of revision 17.
-- **Stop:** Phase 5 not started.
+- **Mandatory checks after any repair:** lint/typecheck, runtime-spine, indicator-model, surface-frame, source-graph, ability-schema, sequence-runtime, production build, `?surfaceAutoTest=1` runtime report, Phase 2 preview smoke, Phase 4 Factory/Sequence browser proofs — all run and passing as of revision 18.
+- **Stop:** Phase 6 not started.
 
 ## 13. Compact Revision Log
 
@@ -287,3 +288,4 @@ No active source-confirmed Phase 1-3 defect is recorded. `src/vfx/runtime/Shockw
 | 15 | Published `surfaceAutoTest=1` real-runtime validator and machine-readable/visible report at source checkpoint `5b030d7b`; decisive browser execution remains pending. |
 | 16 | Fresh clone; deleted orphaned `ShockwaveRuntimeModule.ts` (stale `ShockRing` reference, unreachable dead code) fixing `tsc --noEmit`; ran install/typecheck/4 checks/build all PASS; ran real-browser `?surfaceAutoTest=1` — 12/12 PASS with visible overlay; ran Phase 2 regression smoke — PASS. PND-002 resolved. Phase 4 unlocked, not started. |
 | 17 | **Phase 4 complete.** Added a versioned Ajv-validated ability schema with 1.0.0→1.1.0 migration, hardened `AbilityRegistry` (validated admission, explicit duplicate policy, atomic import, inspectable errors), a real Ability Factory UI (author/validate/register/preview/export/import/reject), ten data-only abilities in `ability-pack.json`, and a deterministic semantic sequence runtime (sequence/parallel/wait/emit/travel/impact/field/residue) driven solely by EngineClock with a working Sequence Designer. Added `check:ability-schema` and `check:sequence-runtime`. Enabled `resolveJsonModule`; added `.gitignore` and committed the npm lockfile. All eight gates plus both browser proofs PASS; Phase 1-3 regressions clean (surface validator still 12/12). PND-003 resolved. Phase 5 not started. |
+| 18 | **Phase 5 complete.** Implemented World-Effect / Aftermath-Residue Layer. Updated `AbilitySchema` to add optional `duration` to `decal` modules. Modified `TerrainManager` to accept durations, budget caps (max 64 decals), and process lifecycle updates with opacity fadeouts on expiration. Added `clearByOwner()` to clean up sequence-owned marks if interrupted. Verified pure checks and sequence cancellation behavior. Phase 6 not started. |

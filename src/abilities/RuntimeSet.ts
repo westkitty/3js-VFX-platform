@@ -19,5 +19,5 @@ export class RuntimeSet {
 
   public getActiveCount(): number { return this.instances.filter((instance) => instance.phase !== 'done').length; }
   public getTotalParticleCount(): number { return this.instances.reduce((sum, instance) => sum + instance.getParticleCount(), 0); }
-  public clear(): void { this.instances.forEach((instance) => instance.destroy()); this.instances = []; }
+  public clear(): void { this.instances.forEach((instance) => instance.cancel()); this.instances = []; }
 }

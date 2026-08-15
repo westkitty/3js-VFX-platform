@@ -245,12 +245,12 @@ export class SequenceRuntime {
     return leftover;
   }
 
-  /** `emit` is the only stage with an external side effect. */
+  /** `emit` and side-effect stages with an abilityId trigger the emitter. */
   private onEnter(runtime: NodeRuntime, elapsedAtEntry: number): void {
-    if (runtime.node.type !== 'emit') return;
+    if (!('abilityId' in runtime.node) || typeof (runtime.node as any).abilityId !== 'string') return;
 
     const event: SequenceEmitEvent = {
-      abilityId: runtime.node.abilityId,
+      abilityId: (runtime.node as any).abilityId,
       nodeId: runtime.node.id,
       seed: Math.floor(this.random.next() * 0xffffffff),
       elapsed: elapsedAtEntry,

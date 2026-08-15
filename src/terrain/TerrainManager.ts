@@ -98,7 +98,10 @@ export class TerrainManager {
     type: SurfaceMutationType,
     center: THREE.Vector3,
     radius: number,
-    intensity: number = 1.0
+    intensity: number = 1.0,
+    time: number = performance.now(),
+    duration: number = 10.0,
+    ownerId?: string
   ) {
     const region: TerrainMutationRegion = {
       id: `region_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
@@ -107,17 +110,24 @@ export class TerrainManager {
       radius,
       intensity,
       shape: 'circle',
-      createdAt: performance.now(),
+      createdAt: time,
+      duration,
+      ownerId,
+      meshes: [],
     };
+
+    if (this.activeRegions.length >= 64) {
+      this.removeRegion(this.activeRegions[0]);
+    }
 
     this.activeRegions.push(region);
 
     // Create ground decal visual mesh
-    this.createDecalMesh(region);
+    region.meshes.push(this.createDecalMesh(region));
 
     // If type is crystal, spawn procedural crystal clusters
     if (type === 'crystal') {
-      this.spawnCrystalCluster(center, radius);
+      region.meshes.push(...this.spawnCrystalCluster(center, radius));
     } else if (type === 'lava') {
       // Lower ground slightly for lava fissure
       this.sculptTerrain(center, radius * 0.8, -0.4 * intensity);
@@ -127,7 +137,7 @@ export class TerrainManager {
     }
   }
 
-  private createDecalMesh(region: TerrainMutationRegion) {
+  private createDecalMesh(region: TerrainMutationRegion): THREE.Mesh {
     const typeEnum = region.type === 'scorch' ? 0 : region.type === 'frost' ? 1 : region.type === 'lava' ? 2 : 3;
 
     const planeGeo = new THREE.PlaneGeometry(region.radius * 2, region.radius * 2);
@@ -157,9 +167,10 @@ export class TerrainManager {
     decalMesh.position.y += 0.03; // slightly offset from terrain surface to avoid z-fighting
 
     this.decalsGroup.add(decalMesh);
+    return decalMesh;
   }
 
-  private spawnCrystalCluster(center: THREE.Vector3, radius: number) {
+  private spawnCrystalCluster(center: THREE.Vector3, radius: number): THREE.Mesh[] {
     const count = Math.floor(5 + Math.random() * 8);
     const crystalGeo = new THREE.ConeGeometry(0.3, 1.8, 5);
 
@@ -171,6 +182,7 @@ export class TerrainManager {
       emissiveIntensity: 0.6,
     });
 
+    const meshes: THREE.Mesh[] = [];
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
       const r = Math.random() * radius * 0.7;
@@ -192,11 +204,30 @@ export class TerrainManager {
       crystal.castShadow = true;
 
       this.crystalsGroup.add(crystal);
+      meshes.push(crystal);
     }
+    return meshes;
   }
 
   public update(time: number) {
     this.material.uniforms.uTime.value = time;
+
+    for (let i = this.activeRegions.length - 1; i >= 0; i--) {
+      const region = this.activeRegions[i];
+      if (time >= region.createdAt + region.duration) {
+        this.removeRegion(region);
+      } else {
+        const timeLeft = region.createdAt + region.duration - time;
+        const fadeMultiplier = Math.min(1.0, timeLeft / 0.5);
+        const currentFade = region.intensity * fadeMultiplier;
+        
+        region.meshes.forEach(mesh => {
+          if (mesh.material && (mesh.material as THREE.ShaderMaterial).uniforms?.uFade) {
+            (mesh.material as THREE.ShaderMaterial).uniforms.uFade.value = currentFade;
+          }
+        });
+      }
+    }
 
     // Update time uniforms on decals
     this.decalsGroup.children.forEach((child) => {
@@ -241,6 +272,26 @@ export class TerrainManager {
 
   public getDecalCount(): number {
     return this.decalsGroup.children.length;
+  }
+
+  public clearByOwner(ownerId: string) {
+    for (let i = this.activeRegions.length - 1; i >= 0; i--) {
+      if (this.activeRegions[i].ownerId === ownerId) {
+        this.removeRegion(this.activeRegions[i]);
+      }
+    }
+  }
+
+  private removeRegion(region: TerrainMutationRegion) {
+    const index = this.activeRegions.indexOf(region);
+    if (index > -1) this.activeRegions.splice(index, 1);
+    
+    region.meshes.forEach(mesh => {
+      if (mesh.parent) mesh.parent.remove(mesh);
+      mesh.geometry.dispose();
+      const meshMaterials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      meshMaterials.forEach((material) => material.dispose());
+    });
   }
 
   public destroy() {

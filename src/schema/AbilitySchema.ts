@@ -76,7 +76,11 @@ const MODULE_PARAM_SCHEMAS: Record<string, unknown> = {
   },
   decal: {
     type: 'object', additionalProperties: false,
-    properties: { decalType: { type: 'string', enum: ABILITY_DECAL_TYPES }, radius: numberRange(0.01, 100) },
+    properties: { 
+      decalType: { type: 'string', enum: ABILITY_DECAL_TYPES }, 
+      radius: numberRange(0.01, 100),
+      duration: numberRange(0, 120),
+    },
     required: ['decalType'],
   },
   telegraph: {

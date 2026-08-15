@@ -14,7 +14,8 @@
     "check:indicator-model": "node scripts/indicator-model-check.cjs",
     "check:surface-frame": "node scripts/surface-frame-check.cjs",
     "check:ability-schema": "tsx scripts/ability-schema-check.ts",
-    "check:sequence-runtime": "tsx scripts/sequence-runtime-check.ts"
+    "check:sequence-runtime": "tsx scripts/sequence-runtime-check.ts",
+    "check:world-effects": "tsx scripts/world-effects-check.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

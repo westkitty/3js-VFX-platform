@@ -69,7 +69,7 @@ export class AbilitySequenceEmitter implements SequenceEmitter {
 
   /** Destroys only the instances this emitter spawned. */
   public cancelAll(): void {
-    for (const instance of this.owned) instance.destroy();
+    for (const instance of this.owned) instance.cancel();
     this.owned = [];
     this.unresolved = [];
   }
