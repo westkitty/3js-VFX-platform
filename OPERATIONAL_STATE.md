@@ -1,7 +1,7 @@
 # Operational State: AetherVFX
 
 <!-- operational-state:metadata
-{"schema_version":1,"project_id":"aethervfx","project_name":"AetherVFX Ability and Procedural VFX Engine","project_root":".","artifact_path":"","state_revision":21,"last_updated":"2026-08-16T10:45:00Z","current_baseline":{"identity":"Phase 6 complete: Performance, Visual Regression, and Mandatory Release Gates verified","state":"release-candidate","last_verified":"2026-08-16T10:45:00Z"},"scope_boundaries":["westkitty/3js-VFX-platform"],"linked_parent_state":null}
+{"schema_version":1,"project_id":"aethervfx","project_name":"AetherVFX Ability and Procedural VFX Engine","project_root":".","artifact_path":"","state_revision":22,"last_updated":"2026-08-16T14:20:00Z","current_baseline":{"identity":"Phase 6 release-gate repair candidate; final release verification pending reference performance baseline","state":"repair-candidate","last_verified":"2026-08-16T14:20:00Z"},"scope_boundaries":["westkitty/3js-VFX-platform"],"linked_parent_state":null}
 -->
 
 ## 1. Project Identity and Scope
@@ -17,7 +17,7 @@
 - Phase 3 verified checkpoint: `4704efd158f237b459d7b2008f06d743f74270c5` (SurfaceQuery, surface frame orientation, 5 indicator shapes, ramp/step fixture, in-app runtime validator).
 - Phase 4 verified checkpoint: `090c81335105bb2698005d88ec3163df66bede56` (versioned Ajv declarative ability schema, hardened registry, Ability Factory UI, 10 data-only abilities, deterministic semantic sequence runtime).
 - Phase 5 verified checkpoint: `628aa3037fee59054dccd6dc623ca9064dcf4e69` (full persistent aftermath & terraforming architecture: MutationManager with true undo/redo and counter reconciliation, ResidueManager, SurfaceQuery, TerrainDemo, 6 archetypes, JSON import/export, 64-budget cap, zero leaks).
-- **Phase 6: Performance, Visual Regression, and Mandatory Release Gates is VERIFIED COMPLETE**:
+- **Phase 6 implementation is published but RELEASE VERIFICATION IS BLOCKED pending the corrected reference performance baseline/regression and final green main CI**:
   1. Real Performance Lab Test Harness (`src/performance/PerformanceHarness.ts`, `src/performance/PerformanceMetricCollector.ts`, `src/performance/PerformanceBaselineComparator.ts`, `src/performance/PerformanceScenarioRegistry.ts`).
   2. Ten deterministic performance scenarios (`idle_baseline`, `sequential_casts_100`, `concurrent_abilities_4`, `overload_burst`, `particle_scaling`, `residue_scaling`, `telegraphs_100`, `editor_open_active_mutation`, `freehand_path_workload`, `terrain_raycast_sweep`) executing with zero texture and geometry leaks.
   3. Authoritative golden performance baseline recorded (`benchmarks/performance/baseline.json`) and automated regression comparator CLI (`scripts/run-perf-suite.ts`).
@@ -32,7 +32,7 @@
 ## 3. Artifact Contract
 
 - Make existing modes truthful before adding breadth.
-- All six roadmap phases are verified complete with empirical automated and browser evidence.
+- Phases 1-5 remain verified. Phase 6 is a repair candidate until the corrected reference performance baseline/regression and final green main CI are recorded.
 - Build/source/self-test presence is backed by actual browser execution and visual snapshot comparison.
 - Maintain full backward compatibility and zero resource leaks across all workloads.
 
@@ -160,7 +160,7 @@
 
 ## 12. Current Change Scope and Impact Radius
 
-- **Platform Status:** All Phases 1 through 6 of the accepted AetherVFX ROADMAP are **VERIFIED COMPLETE**.
+- **Platform Status:** Phases 1-5 are **VERIFIED COMPLETE**. Phase 6 source is implemented and under repaired release-gate validation; release status remains blocked pending the corrected reference performance baseline/regression and final green main CI.
 - **Unified Test Gate:** `npm test` executes the complete release verification pipeline (domain checks, shader safety, performance smoke, browser functional tests, visual regression).
 - **Production Build:** Vite production bundle passes with zero errors and zero unexposed internal testing hooks.
 
@@ -183,4 +183,5 @@
 | 18 | **Phase 5 declarative residue layer complete.** Implemented World-Effect / Aftermath-Residue Layer. Updated `AbilitySchema` to add optional `duration` to `decal` modules. Repaired `SequenceSchema` so semantic `impact`, `field`, and `residue` stages accept validated `abilityId`s. |
 | 19 | **Phase 5 persistent aftermath architecture.** Modularized into `MutationManager`, `ResidueManager`, `SurfaceQuery`, `TerrainDemo`, `TerrainManager`. 6 persistent archetypes, true undo/redo, 64-budget cap, zero leaks. |
 | 20 | **Phase 5 complete: Mutation redo and import ID reconciliation repair.** Repaired `MutationManager.redo()` to fully restore undone `MutationRecord` snapshots. Repaired `MutationManager.importJson()` to reconcile `idCounter` and `transactionCounter`. |
-| 21 | **Phase 6 complete: Performance, Visual Regression, and Release Gates.** Implemented real Performance Lab test harness with 10 deterministic scenarios (zero memory/texture leaks); automated baseline regression comparator (`benchmarks/performance/baseline.json`); Playwright visual regression suite with 8 golden snapshots (`tests/visual.spec.ts`); Playwright browser functional/security suite (`tests/browser.spec.ts`); GLSL shader safety gate (`scripts/shader-safety-check.ts`); GitHub Actions CI (`.github/workflows/validate.yml`); static preview build verification; licensing/provenance inventory (`LICENSE`, `THIRD_PARTY_NOTICES.md`, `PROVENANCE.md`); and full framework documentation (`README.md`). All release gates verified. |
+| 21 | **Phase 6 implementation checkpoint (later found to overclaim release verification).** Performance/visual/CI/provenance source was published, but post-publication audit found failed final CI, invalid frame timing/baseline identity, nondeterministic visual fixtures/tolerance, discrete scaling gaps, and incomplete upstream MIT provenance. |
+| 22 | **Phase 6 release-gate repair candidate.** Corrected CI ordering, RAF-to-RAF performance timing with fixed-step simulation, build identity, discrete scaling profiles, deterministic <=2% visual fixtures, dist-only static smoke, and upstream MIT notice/provenance. Invalid old benchmark JSON was removed. Release remains blocked until the headed reference performance baseline/repeatability/regression evidence is generated for this repair source and final main CI is green. |
