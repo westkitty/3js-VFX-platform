@@ -23,7 +23,7 @@ export const BeamShader = {
     varying vec3 vWorldPosition;
     void main() {
       vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-      float fresnel = pow(1.0 - abs(dot(viewDir, vNormal)), 2.5);
+      float fresnel = pow(clamp(1.0 - abs(dot(viewDir, vNormal)), 0.0, 1.0), 2.5);
       float band = sin(vUv.y * 40.0 - uTime * uScrollSpeed) * 0.5 + 0.5;
       float spiral = sin((vUv.x + vUv.y) * 15.0 - uTime * uScrollSpeed * 1.5) * 0.5 + 0.5;
       vec3 color = mix(uColorGlow, uColorCore, fresnel + band * 0.5);

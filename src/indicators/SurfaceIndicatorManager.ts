@@ -77,10 +77,13 @@ export class SurfaceIndicatorManager {
 }
 
 function buildProjectedOutline(query: SurfaceQuery, hit: SurfaceHit, config: SurfaceIndicatorConfig): THREE.Vector3[] {
+  const tangentTuple: [number, number, number] = hit.tangent
+    ? [hit.tangent.x, hit.tangent.y, hit.tangent.z]
+    : [1, 0, 0];
   const frame = buildDirectionalSurfaceFrameTuple(
     [hit.normal.x, hit.normal.y, hit.normal.z],
     [config.direction.x, config.direction.y, config.direction.z],
-    [hit.tangent.x, hit.tangent.y, hit.tangent.z],
+    tangentTuple,
   );
   const normal = new THREE.Vector3(...frame.normal);
   const locals = buildIndicatorLocalOutline(config);

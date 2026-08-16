@@ -1,0 +1,970 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-08-16T10:30:32.865Z",
+  "environment": {
+    "os": "MacIntel",
+    "platform": "MacIntel",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+    "webglRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+    "webglVendor": "Google Inc. (Apple)",
+    "viewportWidth": 1920,
+    "viewportHeight": 1080,
+    "devicePixelRatio": 1,
+    "threeVersion": "r185",
+    "buildCommit": "628aa30",
+    "buildVersion": "2.4.0",
+    "visibilityState": "visible"
+  },
+  "results": {
+    "idle_baseline": {
+      "scenarioId": "idle_baseline",
+      "scenarioName": "Idle Baseline",
+      "config": {
+        "id": "idle_baseline",
+        "name": "Idle Baseline",
+        "description": "Measures steady-state frame timing and renderer overhead with no active casts or workloads.",
+        "warmupFrames": 300,
+        "measuredFrames": 1800,
+        "seed": 30531585,
+        "cameraPosition": [
+          0,
+          18,
+          28
+        ],
+        "cameraTarget": [
+          0,
+          0,
+          0
+        ],
+        "smokeOverride": {
+          "warmupFrames": 30,
+          "measuredFrames": 120
+        }
+      },
+      "environment": {
+        "os": "MacIntel",
+        "platform": "MacIntel",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+        "webglRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+        "webglVendor": "Google Inc. (Apple)",
+        "viewportWidth": 1920,
+        "viewportHeight": 1080,
+        "devicePixelRatio": 1,
+        "threeVersion": "r185",
+        "buildCommit": "628aa30",
+        "buildVersion": "2.4.0",
+        "visibilityState": "visible"
+      },
+      "samplesCount": 768,
+      "warmupCount": 300,
+      "frameTimeMs": {
+        "p50": 0.1,
+        "p95": 0.2,
+        "p99": 0.2,
+        "mean": 0.11,
+        "min": 0.1,
+        "max": 0.6,
+        "fps": 10000
+      },
+      "drawCalls": {
+        "p50": 1,
+        "p95": 1,
+        "p99": 1,
+        "mean": 1,
+        "min": 1,
+        "max": 1,
+        "fps": 1000
+      },
+      "triangles": {
+        "p50": 20000,
+        "p95": 20000,
+        "p99": 20000,
+        "mean": 20000,
+        "min": 20000,
+        "max": 20000,
+        "fps": 0
+      },
+      "memoryGeometries": {
+        "p50": 1,
+        "p95": 1,
+        "p99": 1,
+        "mean": 1,
+        "min": 1,
+        "max": 1,
+        "fps": 1000
+      },
+      "memoryTextures": {
+        "p50": 2,
+        "p95": 2,
+        "p99": 2,
+        "mean": 2,
+        "min": 2,
+        "max": 2,
+        "fps": 500
+      },
+      "peakParticles": 0,
+      "peakLights": 0,
+      "peakSpells": 0,
+      "peakMutations": 0,
+      "peakDecals": 0,
+      "poolUsage": {
+        "active": 0,
+        "pooled": 16,
+        "total": 16
+      },
+      "leakedResources": {
+        "geometries": 0,
+        "textures": 0,
+        "objects": 0
+      },
+      "timestamp": "2026-08-16T10:25:13.681Z",
+      "passed": true
+    },
+    "sequential_casts_100": {
+      "scenarioId": "sequential_casts_100",
+      "scenarioName": "100 Sequential Casts",
+      "config": {
+        "id": "sequential_casts_100",
+        "name": "100 Sequential Casts",
+        "description": "Sequentially executes 100 registered abilities through the live runtime and verifies full cleanup.",
+        "warmupFrames": 60,
+        "measuredFrames": 600,
+        "seed": 99155970,
+        "smokeOverride": {
+          "warmupFrames": 60,
+          "measuredFrames": 120
+        }
+      },
+      "environment": {
+        "os": "MacIntel",
+        "platform": "MacIntel",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+        "webglRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+        "webglVendor": "Google Inc. (Apple)",
+        "viewportWidth": 1920,
+        "viewportHeight": 1080,
+        "devicePixelRatio": 1,
+        "threeVersion": "r185",
+        "buildCommit": "628aa30",
+        "buildVersion": "2.4.0",
+        "visibilityState": "visible"
+      },
+      "samplesCount": 600,
+      "warmupCount": 60,
+      "frameTimeMs": {
+        "p50": 0.9,
+        "p95": 6.9,
+        "p99": 24.8,
+        "mean": 3.08,
+        "min": 0.2,
+        "max": 465.1,
+        "fps": 1111
+      },
+      "drawCalls": {
+        "p50": 132,
+        "p95": 154,
+        "p99": 157,
+        "mean": 119.97,
+        "min": 34,
+        "max": 159,
+        "fps": 8
+      },
+      "triangles": {
+        "p50": 27498,
+        "p95": 30448,
+        "p99": 30708,
+        "mean": 27444.17,
+        "min": 20630,
+        "max": 31592,
+        "fps": 0
+      },
+      "memoryGeometries": {
+        "p50": 63,
+        "p95": 68,
+        "p99": 70,
+        "mean": 56.82,
+        "min": 27,
+        "max": 71,
+        "fps": 16
+      },
+      "memoryTextures": {
+        "p50": 3,
+        "p95": 3,
+        "p99": 3,
+        "mean": 3,
+        "min": 3,
+        "max": 3,
+        "fps": 333
+      },
+      "peakParticles": 1480,
+      "peakLights": 14,
+      "peakSpells": 14,
+      "peakMutations": 0,
+      "peakDecals": 37,
+      "poolUsage": {
+        "active": 0,
+        "pooled": 16,
+        "total": 16
+      },
+      "leakedResources": {
+        "geometries": 0,
+        "textures": 0,
+        "objects": 0
+      },
+      "timestamp": "2026-08-16T10:25:25.386Z",
+      "passed": true
+    },
+    "concurrent_abilities_4": {
+      "scenarioId": "concurrent_abilities_4",
+      "scenarioName": "Four Concurrent Abilities",
+      "config": {
+        "id": "concurrent_abilities_4",
+        "name": "Four Concurrent Abilities",
+        "description": "Sustains four simultaneous ability instances across four quadrants and measures peak throughput.",
+        "warmupFrames": 60,
+        "measuredFrames": 600,
+        "seed": 79691779,
+        "smokeOverride": {
+          "warmupFrames": 20,
+          "measuredFrames": 100
+        }
+      },
+      "environment": {
+        "os": "MacIntel",
+        "platform": "MacIntel",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+        "webglRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+        "webglVendor": "Google Inc. (Apple)",
+        "viewportWidth": 1920,
+        "viewportHeight": 1080,
+        "devicePixelRatio": 1,
+        "threeVersion": "r185",
+        "buildCommit": "628aa30",
+        "buildVersion": "2.4.0",
+        "visibilityState": "visible"
+      },
+      "samplesCount": 558,
+      "warmupCount": 60,
+      "frameTimeMs": {
+        "p50": 0.2,
+        "p95": 2.5,
+        "p99": 4.6,
+        "mean": 0.51,
+        "min": 0.1,
+        "max": 6.3,
+        "fps": 5000
+      },
+      "drawCalls": {
+        "p50": 12,
+        "p95": 14,
+        "p99": 14,
+        "mean": 12.01,
+        "min": 8,
+        "max": 14,
+        "fps": 83
+      },
+      "triangles": {
+        "p50": 21020,
+        "p95": 21460,
+        "p99": 21460,
+        "mean": 21150.93,
+        "min": 20542,
+        "max": 22528,
+        "fps": 0
+      },
+      "memoryGeometries": {
+        "p50": 13,
+        "p95": 15,
+        "p99": 15,
+        "mean": 13.65,
+        "min": 10,
+        "max": 15,
+        "fps": 77
+      },
+      "memoryTextures": {
+        "p50": 3,
+        "p95": 3,
+        "p99": 3,
+        "mean": 3,
+        "min": 3,
+        "max": 3,
+        "fps": 333
+      },
+      "peakParticles": 660,
+      "peakLights": 4,
+      "peakSpells": 4,
+      "peakMutations": 0,
+      "peakDecals": 2,
+      "poolUsage": {
+        "active": 4,
+        "pooled": 12,
+        "total": 16
+      },
+      "leakedResources": {
+        "geometries": 0,
+        "textures": 0,
+        "objects": 0
+      },
+      "timestamp": "2026-08-16T10:25:36.423Z",
+      "passed": true
+    },
+    "overload_burst": {
+      "scenarioId": "overload_burst",
+      "scenarioName": "Overload Burst",
+      "config": {
+        "id": "overload_burst",
+        "name": "Overload Burst",
+        "description": "Stresses the renderer with 20 simultaneous active ability instances and particle fields.",
+        "warmupFrames": 60,
+        "measuredFrames": 600,
+        "seed": 8257540,
+        "smokeOverride": {
+          "warmupFrames": 20,
+          "measuredFrames": 100
+        }
+      },
+      "environment": {
+        "os": "MacIntel",
+        "platform": "MacIntel",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+        "webglRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+        "webglVendor": "Google Inc. (Apple)",
+        "viewportWidth": 1920,
+        "viewportHeight": 1080,
+        "devicePixelRatio": 1,
+        "threeVersion": "r185",
+        "buildCommit": "628aa30",
+        "buildVersion": "2.4.0",
+        "visibilityState": "visible"
+      },
+      "samplesCount": 600,
+      "warmupCount": 60,
+      "frameTimeMs": {
+        "p50": 1.6,
+        "p95": 6.4,
+        "p99": 17.8,
+        "mean": 2.66,
+        "min": 0.4,
+        "max": 40.2,
+        "fps": 625
+      },
+      "drawCalls": {
+        "p50": 92,
+        "p95": 120,
+        "p99": 125,
+        "mean": 95.26,
+        "min": 72,
+        "max": 126,
+        "fps": 11
+      },
+      "triangles": {
+        "p50": 22366,
+        "p95": 24918,
+        "p99": 25886,
+        "mean": 22622.26,
+        "min": 20948,
+        "max": 28082,
+        "fps": 0
+      },
+      "memoryGeometries": {
+        "p50": 105,
+        "p95": 105,
+        "p99": 107,
+        "mean": 99.18,
+        "min": 57,
+        "max": 107,
+        "fps": 10
+      },
+      "memoryTextures": {
+        "p50": 3,
+        "p95": 3,
+        "p99": 3,
+        "mean": 3,
+        "min": 3,
+        "max": 3,
+        "fps": 333
+      },
+      "peakParticles": 1540,
+      "peakLights": 16,
+      "peakSpells": 20,
+      "peakMutations": 0,
+      "peakDecals": 64,
+      "poolUsage": {
+        "active": 16,
+        "pooled": 0,
+        "total": 16
+      },
+      "leakedResources": {
+        "geometries": 0,
+        "textures": 0,
+        "objects": 0
+      },
+      "timestamp": "2026-08-16T10:25:47.642Z",
+      "passed": true
+    },
+    "particle_scaling": {
+      "scenarioId": "particle_scaling",
+      "scenarioName": "Particle Scaling (1k - 50k)",
+      "config": {
+        "id": "particle_scaling",
+        "name": "Particle Scaling (1k - 50k)",
+        "description": "Benchmarks instanced particle rendering at scales of 1k, 10k, and 50k active simulation motes.",
+        "warmupFrames": 60,
+        "measuredFrames": 600,
+        "seed": 161771525,
+        "smokeOverride": {
+          "warmupFrames": 20,
+          "measuredFrames": 100
+        }
+      },
+      "environment": {
+        "os": "MacIntel",
+        "platform": "MacIntel",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+        "webglRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+        "webglVendor": "Google Inc. (Apple)",
+        "viewportWidth": 1920,
+        "viewportHeight": 1080,
+        "devicePixelRatio": 1,
+        "threeVersion": "r185",
+        "buildCommit": "628aa30",
+        "buildVersion": "2.4.0",
+        "visibilityState": "visible"
+      },
+      "samplesCount": 600,
+      "warmupCount": 60,
+      "frameTimeMs": {
+        "p50": 0.3,
+        "p95": 0.8,
+        "p99": 1.2,
+        "mean": 0.38,
+        "min": 0.1,
+        "max": 3.4,
+        "fps": 3333
+      },
+      "drawCalls": {
+        "p50": 1,
+        "p95": 1,
+        "p99": 1,
+        "mean": 1,
+        "min": 1,
+        "max": 1,
+        "fps": 1000
+      },
+      "triangles": {
+        "p50": 20000,
+        "p95": 20000,
+        "p99": 20000,
+        "mean": 20000,
+        "min": 20000,
+        "max": 20000,
+        "fps": 0
+      },
+      "memoryGeometries": {
+        "p50": 4,
+        "p95": 4,
+        "p99": 4,
+        "mean": 4,
+        "min": 4,
+        "max": 4,
+        "fps": 250
+      },
+      "memoryTextures": {
+        "p50": 3,
+        "p95": 3,
+        "p99": 3,
+        "mean": 3,
+        "min": 3,
+        "max": 3,
+        "fps": 333
+      },
+      "peakParticles": 0,
+      "peakLights": 0,
+      "peakSpells": 0,
+      "peakMutations": 0,
+      "peakDecals": 0,
+      "poolUsage": {
+        "active": 0,
+        "pooled": 16,
+        "total": 16
+      },
+      "leakedResources": {
+        "geometries": 0,
+        "textures": 0,
+        "objects": 0
+      },
+      "timestamp": "2026-08-16T10:25:58.724Z",
+      "passed": true
+    },
+    "residue_scaling": {
+      "scenarioId": "residue_scaling",
+      "scenarioName": "Residue Scaling (100 - 2k Marks)",
+      "config": {
+        "id": "residue_scaling",
+        "name": "Residue Scaling (100 - 2k Marks)",
+        "description": "Tests decal shader rendering and GPU surface projection scaling across 2,000 persistent marks.",
+        "warmupFrames": 60,
+        "measuredFrames": 600,
+        "seed": 82120710,
+        "smokeOverride": {
+          "warmupFrames": 20,
+          "measuredFrames": 100
+        }
+      },
+      "environment": {
+        "os": "MacIntel",
+        "platform": "MacIntel",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+        "webglRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+        "webglVendor": "Google Inc. (Apple)",
+        "viewportWidth": 1920,
+        "viewportHeight": 1080,
+        "devicePixelRatio": 1,
+        "threeVersion": "r185",
+        "buildCommit": "628aa30",
+        "buildVersion": "2.4.0",
+        "visibilityState": "visible"
+      },
+      "samplesCount": 600,
+      "warmupCount": 60,
+      "frameTimeMs": {
+        "p50": 67.2,
+        "p95": 111.4,
+        "p99": 150.8,
+        "mean": 71.47,
+        "min": 31.9,
+        "max": 169.6,
+        "fps": 15
+      },
+      "drawCalls": {
+        "p50": 7296,
+        "p95": 7296,
+        "p99": 7296,
+        "mean": 7296,
+        "min": 7296,
+        "max": 7296,
+        "fps": 0
+      },
+      "triangles": {
+        "p50": 77414,
+        "p95": 77414,
+        "p99": 77414,
+        "mean": 77414,
+        "min": 77414,
+        "max": 77414,
+        "fps": 0
+      },
+      "memoryGeometries": {
+        "p50": 2276,
+        "p95": 2276,
+        "p99": 2276,
+        "mean": 2276,
+        "min": 2276,
+        "max": 2276,
+        "fps": 0
+      },
+      "memoryTextures": {
+        "p50": 3,
+        "p95": 3,
+        "p99": 3,
+        "mean": 3,
+        "min": 3,
+        "max": 3,
+        "fps": 333
+      },
+      "peakParticles": 0,
+      "peakLights": 0,
+      "peakSpells": 0,
+      "peakMutations": 0,
+      "peakDecals": 2000,
+      "poolUsage": {
+        "active": 0,
+        "pooled": 16,
+        "total": 16
+      },
+      "leakedResources": {
+        "geometries": 0,
+        "textures": 0,
+        "objects": 0
+      },
+      "timestamp": "2026-08-16T10:27:48.243Z",
+      "passed": true
+    },
+    "telegraphs_100": {
+      "scenarioId": "telegraphs_100",
+      "scenarioName": "100 Surface Telegraphs",
+      "config": {
+        "id": "telegraphs_100",
+        "name": "100 Surface Telegraphs",
+        "description": "Renders 100 surface-projected telegraph outlines (lines, cones, zones, rings, rectangles).",
+        "warmupFrames": 60,
+        "measuredFrames": 600,
+        "seed": 132243463,
+        "smokeOverride": {
+          "warmupFrames": 20,
+          "measuredFrames": 100
+        }
+      },
+      "environment": {
+        "os": "MacIntel",
+        "platform": "MacIntel",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+        "webglRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+        "webglVendor": "Google Inc. (Apple)",
+        "viewportWidth": 1920,
+        "viewportHeight": 1080,
+        "devicePixelRatio": 1,
+        "threeVersion": "r185",
+        "buildCommit": "628aa30",
+        "buildVersion": "2.4.0",
+        "visibilityState": "visible"
+      },
+      "samplesCount": 600,
+      "warmupCount": 60,
+      "frameTimeMs": {
+        "p50": 0.5,
+        "p95": 1.2,
+        "p99": 1.7,
+        "mean": 0.62,
+        "min": 0.2,
+        "max": 2.8,
+        "fps": 2000
+      },
+      "drawCalls": {
+        "p50": 100,
+        "p95": 100,
+        "p99": 100,
+        "mean": 100,
+        "min": 100,
+        "max": 100,
+        "fps": 10
+      },
+      "triangles": {
+        "p50": 20000,
+        "p95": 20000,
+        "p99": 20000,
+        "mean": 20000,
+        "min": 20000,
+        "max": 20000,
+        "fps": 0
+      },
+      "memoryGeometries": {
+        "p50": 100,
+        "p95": 100,
+        "p99": 100,
+        "mean": 100,
+        "min": 100,
+        "max": 100,
+        "fps": 10
+      },
+      "memoryTextures": {
+        "p50": 3,
+        "p95": 3,
+        "p99": 3,
+        "mean": 3,
+        "min": 3,
+        "max": 3,
+        "fps": 333
+      },
+      "peakParticles": 0,
+      "peakLights": 0,
+      "peakSpells": 0,
+      "peakMutations": 0,
+      "peakDecals": 0,
+      "poolUsage": {
+        "active": 0,
+        "pooled": 16,
+        "total": 16
+      },
+      "leakedResources": {
+        "geometries": 0,
+        "textures": 0,
+        "objects": 0
+      },
+      "timestamp": "2026-08-16T10:28:06.012Z",
+      "passed": true
+    },
+    "editor_open_active_mutation": {
+      "scenarioId": "editor_open_active_mutation",
+      "scenarioName": "Editor Open + Live Parameter Mutation",
+      "config": {
+        "id": "editor_open_active_mutation",
+        "name": "Editor Open + Live Parameter Mutation",
+        "description": "Measures runtime parameter reconciliation overhead under continuous live property edits.",
+        "warmupFrames": 60,
+        "measuredFrames": 600,
+        "seed": 248606728,
+        "smokeOverride": {
+          "warmupFrames": 20,
+          "measuredFrames": 100
+        }
+      },
+      "environment": {
+        "os": "MacIntel",
+        "platform": "MacIntel",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+        "webglRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+        "webglVendor": "Google Inc. (Apple)",
+        "viewportWidth": 1920,
+        "viewportHeight": 1080,
+        "devicePixelRatio": 1,
+        "threeVersion": "r185",
+        "buildCommit": "628aa30",
+        "buildVersion": "2.4.0",
+        "visibilityState": "visible"
+      },
+      "samplesCount": 310,
+      "warmupCount": 60,
+      "frameTimeMs": {
+        "p50": 0.1,
+        "p95": 0.2,
+        "p99": 0.2,
+        "mean": 0.12,
+        "min": 0.1,
+        "max": 0.7,
+        "fps": 10000
+      },
+      "drawCalls": {
+        "p50": 1,
+        "p95": 1,
+        "p99": 1,
+        "mean": 1,
+        "min": 1,
+        "max": 1,
+        "fps": 1000
+      },
+      "triangles": {
+        "p50": 20000,
+        "p95": 20000,
+        "p99": 20000,
+        "mean": 20000,
+        "min": 20000,
+        "max": 20000,
+        "fps": 0
+      },
+      "memoryGeometries": {
+        "p50": 1,
+        "p95": 1,
+        "p99": 1,
+        "mean": 1,
+        "min": 1,
+        "max": 1,
+        "fps": 1000
+      },
+      "memoryTextures": {
+        "p50": 3,
+        "p95": 3,
+        "p99": 3,
+        "mean": 3,
+        "min": 3,
+        "max": 3,
+        "fps": 333
+      },
+      "peakParticles": 0,
+      "peakLights": 0,
+      "peakSpells": 0,
+      "peakMutations": 0,
+      "peakDecals": 0,
+      "poolUsage": {
+        "active": 0,
+        "pooled": 16,
+        "total": 16
+      },
+      "leakedResources": {
+        "geometries": 0,
+        "textures": 0,
+        "objects": 0
+      },
+      "timestamp": "2026-08-16T10:28:17.056Z",
+      "passed": true
+    },
+    "freehand_path_workload": {
+      "scenarioId": "freehand_path_workload",
+      "scenarioName": "Freehand Path Workload",
+      "config": {
+        "id": "freehand_path_workload",
+        "name": "Freehand Path Workload",
+        "description": "Continuously builds, resamples with Catmull-Rom, and projects canonical freehand drawing paths.",
+        "warmupFrames": 60,
+        "measuredFrames": 600,
+        "seed": 256827401,
+        "smokeOverride": {
+          "warmupFrames": 20,
+          "measuredFrames": 100
+        }
+      },
+      "environment": {
+        "os": "MacIntel",
+        "platform": "MacIntel",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+        "webglRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+        "webglVendor": "Google Inc. (Apple)",
+        "viewportWidth": 1920,
+        "viewportHeight": 1080,
+        "devicePixelRatio": 1,
+        "threeVersion": "r185",
+        "buildCommit": "628aa30",
+        "buildVersion": "2.4.0",
+        "visibilityState": "visible"
+      },
+      "samplesCount": 346,
+      "warmupCount": 60,
+      "frameTimeMs": {
+        "p50": 0.1,
+        "p95": 183.3,
+        "p99": 187.2,
+        "mean": 20.45,
+        "min": 0.1,
+        "max": 220.3,
+        "fps": 10000
+      },
+      "drawCalls": {
+        "p50": 2,
+        "p95": 2,
+        "p99": 2,
+        "mean": 1.62,
+        "min": 1,
+        "max": 2,
+        "fps": 500
+      },
+      "triangles": {
+        "p50": 20100,
+        "p95": 20100,
+        "p99": 20100,
+        "mean": 20062.43,
+        "min": 20000,
+        "max": 20100,
+        "fps": 0
+      },
+      "memoryGeometries": {
+        "p50": 2,
+        "p95": 2,
+        "p99": 2,
+        "mean": 1.94,
+        "min": 1,
+        "max": 2,
+        "fps": 500
+      },
+      "memoryTextures": {
+        "p50": 3,
+        "p95": 3,
+        "p99": 3,
+        "mean": 3,
+        "min": 3,
+        "max": 3,
+        "fps": 333
+      },
+      "peakParticles": 0,
+      "peakLights": 0,
+      "peakSpells": 0,
+      "peakMutations": 0,
+      "peakDecals": 0,
+      "poolUsage": {
+        "active": 0,
+        "pooled": 16,
+        "total": 16
+      },
+      "leakedResources": {
+        "geometries": 0,
+        "textures": 0,
+        "objects": 0
+      },
+      "timestamp": "2026-08-16T10:28:34.472Z",
+      "passed": true
+    },
+    "terrain_raycast_sweep": {
+      "scenarioId": "terrain_raycast_sweep",
+      "scenarioName": "Terrain & Irregular Surface Raycast Sweep",
+      "config": {
+        "id": "terrain_raycast_sweep",
+        "name": "Terrain & Irregular Surface Raycast Sweep",
+        "description": "Executes 50 spatial SurfaceQuery point and normal projections per frame across slopes and steps.",
+        "warmupFrames": 60,
+        "measuredFrames": 600,
+        "seed": 99520528,
+        "smokeOverride": {
+          "warmupFrames": 20,
+          "measuredFrames": 100
+        }
+      },
+      "environment": {
+        "os": "MacIntel",
+        "platform": "MacIntel",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36",
+        "webglRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+        "webglVendor": "Google Inc. (Apple)",
+        "viewportWidth": 1920,
+        "viewportHeight": 1080,
+        "devicePixelRatio": 1,
+        "threeVersion": "r185",
+        "buildCommit": "628aa30",
+        "buildVersion": "2.4.0",
+        "visibilityState": "visible"
+      },
+      "samplesCount": 600,
+      "warmupCount": 60,
+      "frameTimeMs": {
+        "p50": 145,
+        "p95": 302.8,
+        "p99": 336.7,
+        "mean": 172.67,
+        "min": 135.6,
+        "max": 375.8,
+        "fps": 7
+      },
+      "drawCalls": {
+        "p50": 1,
+        "p95": 1,
+        "p99": 1,
+        "mean": 1,
+        "min": 1,
+        "max": 1,
+        "fps": 1000
+      },
+      "triangles": {
+        "p50": 20000,
+        "p95": 20000,
+        "p99": 20000,
+        "mean": 20000,
+        "min": 20000,
+        "max": 20000,
+        "fps": 0
+      },
+      "memoryGeometries": {
+        "p50": 1,
+        "p95": 1,
+        "p99": 1,
+        "mean": 1,
+        "min": 1,
+        "max": 1,
+        "fps": 1000
+      },
+      "memoryTextures": {
+        "p50": 3,
+        "p95": 3,
+        "p99": 3,
+        "mean": 3,
+        "min": 3,
+        "max": 3,
+        "fps": 333
+      },
+      "peakParticles": 0,
+      "peakLights": 0,
+      "peakSpells": 0,
+      "peakMutations": 0,
+      "peakDecals": 0,
+      "poolUsage": {
+        "active": 0,
+        "pooled": 16,
+        "total": 16
+      },
+      "leakedResources": {
+        "geometries": 0,
+        "textures": 0,
+        "objects": 0
+      },
+      "timestamp": "2026-08-16T10:30:32.864Z",
+      "passed": true
+    }
+  }
+}

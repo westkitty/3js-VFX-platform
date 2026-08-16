@@ -123,22 +123,114 @@ export default function App() {
     const sequenceRuntime = new SequenceRuntime(sequenceEmitter);
     sequenceRuntimeRef.current = sequenceRuntime;
 
-    const initialSequence = sequenceLibrary.definitions[0];
-    if (initialSequence) {
-      sequenceRuntime.load(initialSequence);
-      setSequenceState(sequenceRuntime.getState());
-    }
+    const isTestMode = search.get('testMode') === '1' || search.get('surfaceAutoTest') === '1' || search.get('perfTest') === '1';
 
-    (window as any).__RUNTIME__ = {
-      engine,
-      terrain,
-      abilityMgr,
-      sequenceRuntime,
-      sequenceEmitter,
-      sequenceDefinitions: sequenceLibrary.definitions,
-      globalAbilityRegistry,
-      postFX: engine.postFX,
-    };
+    if (isTestMode) {
+      let activeRequestedMode = 'vfx_lab';
+      const normalizeMode = (mode: string): WorkbenchMode => {
+        if (mode === 'indicator' || mode === 'telegraphs') return 'telegraphs';
+        if (mode === 'cast' || mode === 'vfx_lab') return 'vfx_lab';
+        if (mode === 'sequence' || mode === 'macro_lab') return 'macro_lab';
+        if (mode === 'terrain' || mode === 'terraformer') return 'terraformer';
+        if (mode === 'freehand' || mode === 'freehand_drawing') return 'freehand_drawing';
+        if (mode === 'perf_lab') return 'perf_lab';
+        return 'vfx_lab';
+      };
+
+      const normalizeMutationType = (type: string): SurfaceMutationType => {
+        if (type === 'crater' || type === 'scorch' || type === 'burn') return 'scorch';
+        if (type === 'raise' || type === 'crystal') return 'crystal';
+        if (type === 'frost') return 'frost';
+        if (type === 'lava') return 'lava';
+        if (type === 'void_scar') return 'void_scar';
+        if (type === 'golden_rune') return 'golden_rune';
+        return 'scorch';
+      };
+
+      const testApi = {
+        engine,
+        terrain,
+        abilityMgr,
+        freehandCaster,
+        indicatorMgr,
+        sequenceRuntime,
+        sequenceEmitter,
+        sequenceDefinitions: sequenceLibrary.definitions,
+        globalAbilityRegistry,
+        postFX: engine.postFX,
+        getRegisteredAbilityIds: () => globalAbilityRegistry.getAll().map((a) => a.id),
+        isEngineReady: () => !!engine && !!engine.renderer,
+        setMode: (mode: string) => {
+          activeRequestedMode = mode;
+          setCurrentMode(normalizeMode(mode));
+        },
+        getMode: () => activeRequestedMode,
+        getActiveAbilityCount: () => abilityMgr.getActiveCount(),
+        castAbility: (id: string, origin = { x: 0, y: 0, z: 0 }, target = { x: 10, y: 0, z: 10 }) => {
+          const def = globalAbilityRegistry.get(id) ?? globalAbilityRegistry.getAll()[0];
+          if (!def) return { success: false };
+          const origVec = new THREE.Vector3(origin.x, origin.y, origin.z);
+          const targVec = new THREE.Vector3(target.x, target.y, target.z);
+          const dirVec = targVec.clone().sub(origVec);
+          const dist = dirVec.length() || 1;
+          dirVec.normalize();
+          const request = {
+            id: `cast_${Date.now()}`,
+            abilityId: def.id,
+            origin: origVec,
+            target: targVec,
+            direction: dirVec,
+            distance: dist,
+            surface: engine.surfaceQuery.projectPoint(targVec) ?? undefined,
+            seed: 12345,
+            timestamp: engine.clock.simulationTime,
+          };
+          const instance = abilityMgr.cast(request, def);
+          return { success: !!instance, instanceId: instance ? instance.id : undefined };
+        },
+        getMutationCount: () => terrain.mutationManager.getActiveCount(),
+        applyTerrainMutation: (type: any, center = { x: 0, y: 0, z: 0 }, radius = 4, depth = 1.5) => {
+          const centerArray: [number, number, number] = Array.isArray(center)
+            ? [center[0], center[1], center[2]]
+            : [center.x ?? 0, center.y ?? 0, center.z ?? 0];
+          const mut = terrain.mutationManager.applyMutation({
+            type: normalizeMutationType(type),
+            center: centerArray,
+            radius,
+            intensity: depth,
+          });
+          return { success: !!mut, mutationId: mut ? mut.id : undefined };
+        },
+        undoTerrainMutation: () => {
+          const success = terrain.mutationManager.undo();
+          return { success, count: terrain.mutationManager.getActiveCount() };
+        },
+        redoTerrainMutation: () => {
+          const success = terrain.mutationManager.redo();
+          return { success, count: terrain.mutationManager.getActiveCount() };
+        },
+        exportTerrainMutations: () => terrain.mutationManager.exportDocument(),
+        importTerrainMutations: (data: any) => {
+          const jsonStr = typeof data === 'string' ? data : JSON.stringify(data);
+          const res = terrain.mutationManager.importJson(jsonStr);
+          return { success: res.ok, count: terrain.mutationManager.getActiveCount() };
+        },
+        clearTerrainMutations: () => terrain.mutationManager.reset(),
+        playSequence: (sequenceId?: string) => {
+          const targetSeq = sequenceId
+            ? sequenceLibrary.definitions.find((s) => s.id === sequenceId) ?? sequenceLibrary.definitions[0]
+            : sequenceLibrary.definitions[0];
+          if (!targetSeq) return { success: false };
+          sequenceRuntime.load(targetSeq);
+          sequenceRuntime.start();
+          return { success: true };
+        },
+        THREE,
+      };
+      (window as any).__AETHERVFX_TEST_API__ = testApi;
+      (window as any).__RUNTIME__ = testApi;
+      (window as any).THREE = THREE;
+    }
 
     let previewUiElapsed = 0;
     engine.registerUpdateCallback((dt, time) => {
@@ -183,9 +275,19 @@ export default function App() {
         })
       : null;
 
+    const initialSequence = sequenceLibrary.definitions[0];
+    if (initialSequence) {
+      sequenceRuntime.load(initialSequence);
+      setSequenceState(sequenceRuntime.getState());
+    }
+
     return () => {
       if (validationFrameId !== null) cancelAnimationFrame(validationFrameId);
       if (surfaceAutoTestEnabled) delete (window as SurfaceValidationWindow).__AETHERVFX_SURFACE_VALIDATION__;
+      if (isTestMode) {
+        delete (window as any).__AETHERVFX_TEST_API__;
+        delete (window as any).__RUNTIME__;
+      }
       sequenceRuntime.stop();
       abilityMgr.clearAll();
       freehandCaster.clear();
@@ -453,7 +555,17 @@ export default function App() {
           />
         )}
         {currentMode === 'freehand_drawing' && <FreehandPanel />}
-        {currentMode === 'perf_lab' && <PerformancePanel engine={engineRef.current} />}
+        {currentMode === 'perf_lab' && (
+          <PerformancePanel
+            engine={engineRef.current}
+            terrain={terrainRef.current}
+            abilityMgr={abilityMgrRef.current}
+            freehandCaster={freehandCasterRef.current}
+            indicatorMgr={indicatorMgrRef.current}
+            sequenceRuntime={sequenceRuntimeRef.current}
+            sequenceEmitter={sequenceEmitterRef.current}
+          />
+        )}
       </div>
 
       {surfaceValidationReport && (

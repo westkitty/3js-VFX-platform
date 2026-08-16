@@ -1,0 +1,42 @@
+name: AetherVFX Release Gates & CI Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Shader Safety Static Gate
+        run: npm run check:shader-safety
+
+      - name: Unit & Schema Test Suite
+        run: npm run test
+
+      - name: Production Static Bundle Build
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Playwright Browser Test Suite
+        run: npm run test:browser
+
+      - name: Deterministic Performance Benchmark Smoke Gate
+        run: npm run test:perf:smoke
