@@ -238,7 +238,7 @@ const path = require('path');
     results.phase5IrregularSurfaces = true;
 
     // ==========================================
-    // 5. PHASE 5 SAVE/LOAD ROUND-TRIP & TRANSACTIONS (UNDO/REDO)
+    // 5. PHASE 5 SAVE/LOAD ROUND-TRIP, TRANSACTIONS (UNDO/REDO), & POST-IMPORT ID RECONCILIATION
     // ==========================================
     console.log('\n[5/6] Running Phase 5 Save/Load Round-trip & Undo/Redo...');
     const p5SaveLoadUndoProof = await page.evaluate(async () => {
@@ -260,13 +260,32 @@ const path = require('path');
       const countAfterImport = r.terrain.mutationManager.getActiveCount();
       const decalsAfterImport = r.terrain.getDecalCount();
 
-      // 4. Test Transactions: Mutation Undo / Redo
-      r.terrain.applyMutation('scorch', new testEnv.THREE.Vector3(0, 0, 0), 3.0);
+      // 4. Test Transactions: Mutation Undo / Redo with exact ID preservation and count verification
+      const mutToUndo = r.terrain.applyMutation('scorch', new testEnv.THREE.Vector3(0, 0, 0), 3.0);
+      const idBeforeUndo = mutToUndo.id;
+      const seedBeforeUndo = mutToUndo.seed;
       const countBeforeUndo = r.terrain.mutationManager.getActiveCount();
+      const decalsBeforeUndo = r.terrain.getDecalCount();
+
       r.terrain.undo();
       const countAfterUndo = r.terrain.mutationManager.getActiveCount();
+      const decalsAfterUndo = r.terrain.getDecalCount();
+      const mutAbsentAfterUndo = r.terrain.mutationManager.getMutation(idBeforeUndo) === undefined;
+
       r.terrain.redo();
       const countAfterRedo = r.terrain.mutationManager.getActiveCount();
+      const decalsAfterRedo = r.terrain.getDecalCount();
+      const restoredMut = r.terrain.mutationManager.getMutation(idBeforeUndo);
+      const mutRestoredAfterRedo = restoredMut !== undefined && restoredMut.id === idBeforeUndo && restoredMut.seed === seedBeforeUndo;
+
+      const mutationUndoRedoPass = (
+        countAfterUndo === countBeforeUndo - 1 &&
+        countAfterRedo === countBeforeUndo &&
+        decalsAfterUndo === decalsBeforeUndo - 1 &&
+        decalsAfterRedo === decalsBeforeUndo &&
+        mutAbsentAfterUndo &&
+        mutRestoredAfterRedo
+      );
 
       // 5. Test Transactions: Terrain Height Sculpt Undo / Redo
       const posArr = r.terrain.mesh.geometry.attributes.position.array;
@@ -290,6 +309,53 @@ const path = require('path');
       const sculptUndoCorrect = Math.abs(initialY - undoneY) < 1e-5;
       const sculptRedoCorrect = Math.abs(sculptedY - redoneY) < 1e-5;
 
+      // 6. Test Post-Import ID & Transaction Counter Reconciliation (No Collision)
+      const highIdDoc = {
+        schemaVersion: '1.0.0',
+        mutations: [
+          {
+            schemaVersion: '1.0.0',
+            id: 'mut_scorch_10',
+            type: 'scorch',
+            surfaceId: 'terrain_main',
+            center: [10, 0, 10],
+            normal: [0, 1, 0],
+            radius: 2,
+            intensity: 1.0,
+            shape: 'circle',
+            createdAt: 0,
+            duration: 10,
+            seed: 777,
+            transactionId: 'tx_50',
+          },
+          {
+            schemaVersion: '1.0.0',
+            id: 'mut_crystal_35',
+            type: 'crystal',
+            surfaceId: 'terrain_main',
+            center: [15, 0, 15],
+            normal: [0, 1, 0],
+            radius: 2,
+            intensity: 1.0,
+            shape: 'circle',
+            createdAt: 0,
+            duration: 10,
+            seed: 888,
+            transactionId: 'tx_terrain_60',
+          },
+        ],
+      };
+      const importHighRes = r.terrain.mutationManager.importJson(JSON.stringify(highIdDoc), { clearExisting: true });
+      const newPostImportMut = r.terrain.applyMutation('scorch', new testEnv.THREE.Vector3(20, 0, 20), 2.0);
+      const postImportIdUnique = (
+        newPostImportMut.id !== 'mut_scorch_10' &&
+        newPostImportMut.id !== 'mut_crystal_35' &&
+        newPostImportMut.id === 'mut_scorch_36'
+      );
+      const postImportCountCorrect = r.terrain.mutationManager.getActiveCount() === 3;
+      const importedRecord1Preserved = r.terrain.mutationManager.getMutation('mut_scorch_10')?.id === 'mut_scorch_10';
+      const importedRecord2Preserved = r.terrain.mutationManager.getMutation('mut_crystal_35')?.id === 'mut_crystal_35';
+
       return {
         parseValid: parseResult.ok,
         countAfterClear,
@@ -300,16 +366,32 @@ const path = require('path');
         countBeforeUndo,
         countAfterUndo,
         countAfterRedo,
+        mutationUndoRedoPass,
         sculptUndoCorrect,
         sculptRedoCorrect,
+        importHighOk: importHighRes.ok,
+        postImportIdUnique,
+        postImportCountCorrect,
+        importedRecord1Preserved,
+        importedRecord2Preserved,
       };
     });
 
     console.log('Phase 5 Save/Load & Undo/Redo result:', p5SaveLoadUndoProof);
-    if (!p5SaveLoadUndoProof.parseValid || p5SaveLoadUndoProof.countAfterClear !== 0 || !p5SaveLoadUndoProof.importOk || !p5SaveLoadUndoProof.sculptUndoCorrect || !p5SaveLoadUndoProof.sculptRedoCorrect) {
+    if (
+      !p5SaveLoadUndoProof.parseValid ||
+      p5SaveLoadUndoProof.countAfterClear !== 0 ||
+      !p5SaveLoadUndoProof.importOk ||
+      !p5SaveLoadUndoProof.mutationUndoRedoPass ||
+      !p5SaveLoadUndoProof.sculptUndoCorrect ||
+      !p5SaveLoadUndoProof.sculptRedoCorrect ||
+      !p5SaveLoadUndoProof.importHighOk ||
+      !p5SaveLoadUndoProof.postImportIdUnique ||
+      !p5SaveLoadUndoProof.postImportCountCorrect
+    ) {
       throw new Error('Phase 5 Save/Load & Undo/Redo failed');
     }
-    console.log('>>> PHASE 5 SAVE/LOAD & UNDO/REDO: PASS (Atomic import, JSON schema validity, vertex height undo/redo verified)');
+    console.log('>>> PHASE 5 SAVE/LOAD & UNDO/REDO: PASS (Atomic import, JSON schema validity, vertex height undo/redo, mutation undo/redo, and ID reconciliation verified)');
     results.phase5SaveLoadRoundtrip = true;
     results.phase5UndoRedo = true;
 

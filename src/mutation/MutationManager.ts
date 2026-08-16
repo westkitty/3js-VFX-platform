@@ -112,6 +112,7 @@ export class MutationManager {
       id: txId,
       timestamp: this.currentTime,
       addedMutationIds: [],
+      addedMutations: [],
       removedMutations: [],
     };
     return txId;
@@ -138,6 +139,7 @@ export class MutationManager {
         id: txId,
         timestamp: this.currentTime,
         addedMutationIds: [],
+        addedMutations: [],
         removedMutations: [],
         terrainDelta: delta,
       };
@@ -148,6 +150,12 @@ export class MutationManager {
   }
 
   public applyMutation(input: ApplyMutationInput): MutationRecord {
+    let selfCreatedTx = false;
+    if (!this.activeTransaction) {
+      selfCreatedTx = true;
+      this.beginTransaction();
+    }
+
     const id = `mut_${input.type}_${++this.idCounter}`;
     const createdAt = input.createdAt ?? this.currentTime;
     const duration = input.duration ?? 10.0;
@@ -173,12 +181,6 @@ export class MutationManager {
       params: input.params ? { ...input.params } : undefined,
     };
 
-    let selfCreatedTx = false;
-    if (!this.activeTransaction) {
-      selfCreatedTx = true;
-      this.beginTransaction();
-    }
-
     // Apply terrain delta if bundled
     if (input.terrainDelta && this.activeTransaction) {
       this.activeTransaction.terrainDelta = input.terrainDelta;
@@ -193,6 +195,7 @@ export class MutationManager {
 
     if (this.activeTransaction) {
       this.activeTransaction.addedMutationIds.push(record.id);
+      this.activeTransaction.addedMutations.push(record);
     }
 
     this.notifyAdded(record);
@@ -251,24 +254,28 @@ export class MutationManager {
     if (this.undoStack.length === 0) return false;
     const tx = this.undoStack.pop()!;
 
-    // 1. Remove added mutations
-    const restoredAdds: MutationRecord[] = [];
-    for (const id of tx.addedMutationIds) {
-      const mut = this.mutations.get(id);
-      if (mut) {
-        restoredAdds.push(mut);
-        this.mutations.delete(id);
-        const idx = this.order.indexOf(id);
+    // 1. Remove added mutations (in reverse addition order)
+    const adds = tx.addedMutations && tx.addedMutations.length > 0
+      ? tx.addedMutations
+      : tx.addedMutationIds.map((id) => this.mutations.get(id)!).filter(Boolean);
+
+    for (let i = adds.length - 1; i >= 0; i--) {
+      const mut = adds[i];
+      if (this.mutations.has(mut.id)) {
+        this.mutations.delete(mut.id);
+        const idx = this.order.indexOf(mut.id);
         if (idx > -1) this.order.splice(idx, 1);
         this.notifyRemoved(mut);
       }
     }
 
-    // 2. Restore removed mutations
+    // 2. Restore removed mutations (in original order)
     for (const mut of tx.removedMutations) {
-      this.mutations.set(mut.id, mut);
-      this.order.push(mut.id);
-      this.notifyAdded(mut);
+      if (!this.mutations.has(mut.id)) {
+        this.mutations.set(mut.id, mut);
+        this.order.push(mut.id);
+        this.notifyAdded(mut);
+      }
     }
 
     // 3. Revert terrain delta if present
@@ -284,17 +291,35 @@ export class MutationManager {
     if (this.redoStack.length === 0) return false;
     const tx = this.redoStack.pop()!;
 
-    // 1. Re-add added mutations
-    // Re-verify budget
-    for (const id of tx.addedMutationIds) {
-      // Find if we have original record or restore it
-      const existing = this.mutations.get(id);
-      if (!existing) {
-        // Find in removed or reconstruct
+    // 1. Restore added mutations in original addition order
+    const adds = tx.addedMutations && tx.addedMutations.length > 0
+      ? tx.addedMutations
+      : [];
+
+    for (const mut of adds) {
+      if (!this.mutations.has(mut.id)) {
+        // Enforce budgets before restoring
+        this.enforceBudgetForType(mut.type);
+        this.enforceGlobalBudget();
+
+        this.mutations.set(mut.id, mut);
+        this.order.push(mut.id);
+        this.notifyAdded(mut);
       }
     }
 
-    // 2. Re-apply terrain delta
+    // 2. Remove mutations that were removed in the transaction (in reverse order)
+    for (let i = tx.removedMutations.length - 1; i >= 0; i--) {
+      const mut = tx.removedMutations[i];
+      if (this.mutations.has(mut.id)) {
+        this.mutations.delete(mut.id);
+        const idx = this.order.indexOf(mut.id);
+        if (idx > -1) this.order.splice(idx, 1);
+        this.notifyRemoved(mut);
+      }
+    }
+
+    // 3. Re-apply terrain delta
     if (tx.terrainDelta) {
       this.notifyTerrainDelta(tx.terrainDelta, false);
     }
@@ -310,6 +335,8 @@ export class MutationManager {
     this.undoStack = [];
     this.redoStack = [];
     this.activeTransaction = null;
+    this.idCounter = 0;
+    this.transactionCounter = 0;
 
     for (const mut of all) {
       this.notifyRemoved(mut);
@@ -360,10 +387,50 @@ export class MutationManager {
       }
     }
 
+    // Collision check for merge-imports
+    if (options.clearExisting === false) {
+      for (const mut of doc.mutations) {
+        if (this.mutations.has(mut.id)) {
+          return {
+            ok: false,
+            count: 0,
+            error: `Import collision: mutation id "${mut.id}" already exists in active state.`,
+          };
+        }
+      }
+    }
+
     // Atomic import: only mutate if fully valid
     if (options.clearExisting !== false) {
       this.reset();
     }
+
+    // Counter reconciliation: determine highest numeric suffixes
+    let maxId = options.clearExisting === false ? this.idCounter : 0;
+    let maxTx = options.clearExisting === false ? this.transactionCounter : 0;
+
+    for (const mut of doc.mutations) {
+      const mutMatch = mut.id.match(/^mut_.*_(\d+)$/);
+      if (mutMatch) {
+        const num = parseInt(mutMatch[1], 10);
+        if (Number.isFinite(num) && num > maxId) {
+          maxId = num;
+        }
+      }
+
+      if (mut.transactionId) {
+        const txMatch = mut.transactionId.match(/^tx_(?:terrain_)?(\d+)$/);
+        if (txMatch) {
+          const num = parseInt(txMatch[1], 10);
+          if (Number.isFinite(num) && num > maxTx) {
+            maxTx = num;
+          }
+        }
+      }
+    }
+
+    this.idCounter = maxId;
+    this.transactionCounter = maxTx;
 
     let loadedCount = 0;
     for (const mut of doc.mutations) {
@@ -377,6 +444,14 @@ export class MutationManager {
     }
 
     return { ok: true, count: loadedCount };
+  }
+
+  public getIdCounter(): number {
+    return this.idCounter;
+  }
+
+  public getTransactionCounter(): number {
+    return this.transactionCounter;
   }
 
   public getMutations(): MutationRecord[] {

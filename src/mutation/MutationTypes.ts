@@ -43,6 +43,7 @@ export interface MutationTransaction {
   id: string;
   timestamp: number;
   addedMutationIds: string[];
+  addedMutations: MutationRecord[];
   removedMutations: MutationRecord[];
   terrainDelta?: TerrainHeightDelta;
 }

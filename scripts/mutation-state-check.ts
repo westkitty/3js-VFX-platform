@@ -163,17 +163,85 @@ tmPause.resetTerrain();
 assert.equal(tmPause.mutationManager.getActiveCount(), 0, 'Reset clears mutations');
 assert.equal(tmPause.getDecalCount(), 0, 'Reset clears decals');
 
-// 14. Verifies transaction recording and single undo() reverses mutations
+// 14. [Requirement A] Verifies single mutation undo() and redo() with complete record & visual restoration
 const tmTx = new TerrainManager(scene);
-tmTx.applyMutation('scorch', new THREE.Vector3(0, 0, 0), 2);
+const createdMut = tmTx.applyMutation('scorch', new THREE.Vector3(1, 0, 2), 2.5, 1.0, 100, 15.0);
+const origId = createdMut.id;
+const origSeed = createdMut.seed;
 assert.equal(tmTx.mutationManager.getActiveCount(), 1);
 assert.equal(tmTx.getDecalCount(), 1);
+
+// Undo
 const undone = tmTx.undo();
 assert.equal(undone, true, 'Undo should succeed');
-assert.equal(tmTx.mutationManager.getActiveCount(), 0, 'Undo removes mutation');
+assert.equal(tmTx.mutationManager.getActiveCount(), 0, 'Undo removes mutation from state');
+assert.equal(tmTx.mutationManager.getMutation(origId), undefined, 'Undone mutation must not exist in Map');
 assert.equal(tmTx.getDecalCount(), 0, 'Undo removes visual decal');
 
-// 15. Verifies transaction recording and undo() reverses terrain vertex deformation
+// Redo
+const redone = tmTx.redo();
+assert.equal(redone, true, 'Redo should succeed');
+assert.equal(tmTx.mutationManager.getActiveCount(), 1, 'Redo restores mutation to state');
+assert.equal(tmTx.getDecalCount(), 1, 'Redo restores visual decal');
+const restoredMut = tmTx.mutationManager.getMutation(origId);
+assert.ok(restoredMut, 'Restored mutation must exist in Map');
+assert.equal(restoredMut.id, origId, 'Redo must preserve exact original ID');
+assert.equal(restoredMut.seed, origSeed, 'Redo must preserve exact original PRNG seed');
+assert.equal(restoredMut.type, 'scorch');
+assert.equal(restoredMut.surfaceId, 'terrain_main');
+assert.deepEqual(restoredMut.center, [1, 0, 2]);
+assert.equal(restoredMut.radius, 2.5);
+assert.equal(restoredMut.duration, 15.0);
+assert.equal(restoredMut.createdAt, 100);
+
+// 15. [Requirement B] Verifies grouped mutation transaction undo and redo in original order
+const tmGroup = new TerrainManager(scene);
+const groupTxId = tmGroup.mutationManager.beginTransaction();
+const gMut1 = tmGroup.applyMutation('frost', new THREE.Vector3(-2, 0, 0), 2.0);
+const gMut2 = tmGroup.applyMutation('crystal', new THREE.Vector3(2, 0, 0), 3.0);
+const committed = tmGroup.mutationManager.commitTransaction();
+assert.ok(committed, 'Group transaction must commit');
+assert.equal(tmGroup.mutationManager.getActiveCount(), 2);
+assert.equal(tmGroup.getDecalCount(), 2);
+
+// Undo grouped transaction
+tmGroup.undo();
+assert.equal(tmGroup.mutationManager.getActiveCount(), 0, 'Grouped undo must remove all added mutations');
+assert.equal(tmGroup.getDecalCount(), 0, 'Grouped undo must remove all visual decals');
+
+// Redo grouped transaction
+tmGroup.redo();
+assert.equal(tmGroup.mutationManager.getActiveCount(), 2, 'Grouped redo must restore all added mutations');
+assert.equal(tmGroup.getDecalCount(), 2, 'Grouped redo must restore all visual decals');
+const orderedIds = tmGroup.mutationManager.getMutations().map((m) => m.id);
+assert.deepEqual(orderedIds, [gMut1.id, gMut2.id], 'Grouped redo must restore mutations in deterministic original order');
+assert.equal(tmGroup.mutationManager.getMutation(gMut1.id)?.seed, gMut1.seed);
+assert.equal(tmGroup.mutationManager.getMutation(gMut2.id)?.seed, gMut2.seed);
+
+// 16. [Requirement C] Verifies mutation removal transaction undo and redo symmetry
+const tmRemove = new TerrainManager(scene);
+const stableMut = tmRemove.applyMutation('lava', new THREE.Vector3(0, 0, 0), 3.0);
+assert.equal(tmRemove.mutationManager.getActiveCount(), 1);
+
+// Begin transaction and remove
+tmRemove.mutationManager.beginTransaction();
+tmRemove.mutationManager.removeMutation(stableMut.id);
+tmRemove.mutationManager.commitTransaction();
+assert.equal(tmRemove.mutationManager.getActiveCount(), 0, 'Mutation must be removed');
+assert.equal(tmRemove.getDecalCount(), 0, 'Decal must be removed');
+
+// Undo removal -> restores mutation
+tmRemove.undo();
+assert.equal(tmRemove.mutationManager.getActiveCount(), 1, 'Undo removal restores mutation');
+assert.equal(tmRemove.getDecalCount(), 1, 'Undo removal restores visual decal');
+assert.equal(tmRemove.mutationManager.getMutation(stableMut.id)?.id, stableMut.id);
+
+// Redo removal -> removes mutation again
+tmRemove.redo();
+assert.equal(tmRemove.mutationManager.getActiveCount(), 0, 'Redo removal removes mutation again');
+assert.equal(tmRemove.getDecalCount(), 0, 'Redo removal removes visual decal again');
+
+// 17. [Requirement D] Verifies transaction recording and undo/redo of terrain vertex deformation
 const tmSculpt = new TerrainManager(scene);
 const posArr = tmSculpt.mesh.geometry.attributes.position.array as Float32Array;
 let centerIdx = 0;
@@ -194,13 +262,160 @@ assert.ok(deformedVertexY > origVertexY + 1.0, 'Center vertex height must increa
 tmSculpt.undo();
 const restoredVertexY = posArr[centerIdx * 3 + 1];
 assert.ok(Math.abs(origVertexY - restoredVertexY) < 1e-6, 'Undo must restore original vertex height');
-
-// 16. Verifies redo() restores undone mutations and terrain deformation
 tmSculpt.redo();
 const redoneVertexY = posArr[centerIdx * 3 + 1];
 assert.ok(Math.abs(deformedVertexY - redoneVertexY) < 1e-6, 'Redo must reapply sculpt height');
 
-// 17. Verifies JSON state export produces valid schema-compliant string
+// 18. [Requirement E] Verifies import -> new mutation ID continues beyond imported generated numeric suffixes
+const tmImportId = new MutationManager();
+const docWithHighIds: MutationDocument = {
+  schemaVersion: '1.0.0',
+  mutations: [
+    {
+      schemaVersion: '1.0.0',
+      id: 'mut_scorch_1',
+      type: 'scorch',
+      surfaceId: 'terrain_main',
+      center: [0, 0, 0],
+      normal: [0, 1, 0],
+      radius: 3,
+      intensity: 1.0,
+      shape: 'circle',
+      createdAt: 0,
+      duration: 10,
+      seed: 101,
+      transactionId: 'tx_12',
+    },
+    {
+      schemaVersion: '1.0.0',
+      id: 'mut_crystal_27',
+      type: 'crystal',
+      surfaceId: 'terrain_main',
+      center: [5, 0, 5],
+      normal: [0, 1, 0],
+      radius: 2,
+      intensity: 1.0,
+      shape: 'circle',
+      createdAt: 0,
+      duration: 10,
+      seed: 202,
+      transactionId: 'tx_terrain_41',
+    },
+  ],
+};
+const resHighImport = tmImportId.importJson(JSON.stringify(docWithHighIds));
+assert.equal(resHighImport.ok, true, 'Import with high IDs must succeed');
+assert.equal(tmImportId.getActiveCount(), 2);
+assert.equal(tmImportId.getIdCounter(), 27, 'idCounter must be reconciled to 27');
+assert.equal(tmImportId.getTransactionCounter(), 41, 'transactionCounter must be reconciled to 41');
+
+// Create new mutation after import
+const newMutAfterImport = tmImportId.applyMutation({ type: 'scorch', center: [10, 0, 10], radius: 2 });
+assert.equal(newMutAfterImport.id, 'mut_scorch_28', 'New mutation ID must continue strictly beyond imported max (28 > 27)');
+assert.equal(tmImportId.getActiveCount(), 3, 'Active count must increase to 3');
+assert.equal(tmImportId.getMutation('mut_scorch_1')?.id, 'mut_scorch_1', 'Imported mut_scorch_1 must remain intact');
+assert.equal(tmImportId.getMutation('mut_crystal_27')?.id, 'mut_crystal_27', 'Imported mut_crystal_27 must remain intact');
+
+// 19. [Requirement F] Verifies import -> new transaction ID continues beyond imported transaction suffixes
+assert.equal(newMutAfterImport.transactionId, 'tx_42', 'applyMutation auto-transaction must be tx_42 (> 41)');
+const newTxId = tmImportId.beginTransaction();
+assert.equal(newTxId, 'tx_43', 'Subsequent beginTransaction must be tx_43 (> 41)');
+tmImportId.commitTransaction();
+
+// 20. [Requirement G] Verifies merge import (clearExisting: false) uniqueness and counter reconciliation
+const tmMerge = new MutationManager();
+const initialMut1 = tmMerge.applyMutation({ type: 'scorch', center: [0, 0, 0], radius: 2 }); // mut_scorch_1
+const initialMut2 = tmMerge.applyMutation({ type: 'frost', center: [1, 0, 0], radius: 2 }); // mut_frost_2
+assert.equal(initialMut1.id, 'mut_scorch_1');
+assert.equal(initialMut2.id, 'mut_frost_2');
+
+const mergeDoc: MutationDocument = {
+  schemaVersion: '1.0.0',
+  mutations: [
+    {
+      schemaVersion: '1.0.0',
+      id: 'mut_void_scar_50',
+      type: 'void_scar',
+      surfaceId: 'terrain_main',
+      center: [20, 0, 20],
+      normal: [0, 1, 0],
+      radius: 4,
+      intensity: 1.0,
+      shape: 'circle',
+      createdAt: 10,
+      duration: 20,
+      seed: 555,
+      transactionId: 'tx_80',
+    },
+  ],
+};
+const resMerge = tmMerge.importJson(JSON.stringify(mergeDoc), { clearExisting: false });
+assert.equal(resMerge.ok, true, 'Merge import must succeed');
+assert.equal(tmMerge.getActiveCount(), 3, 'Merge import must preserve existing and add imported records');
+assert.equal(tmMerge.getIdCounter(), 50, 'Merge import must update idCounter to max (50)');
+assert.equal(tmMerge.getTransactionCounter(), 80, 'Merge import must update transactionCounter to max (80)');
+
+const postMergeMut = tmMerge.applyMutation({ type: 'lava', center: [30, 0, 30], radius: 3 });
+assert.equal(postMergeMut.id, 'mut_lava_51', 'Post-merge mutation ID must be 51');
+assert.equal(tmMerge.getActiveCount(), 4);
+
+// 21. [Requirement H] Verifies failed import counter atomicity
+const preFailIdCounter = tmMerge.getIdCounter();
+const preFailTxCounter = tmMerge.getTransactionCounter();
+const preFailActiveCount = tmMerge.getActiveCount();
+
+const badImportJson = JSON.stringify({
+  schemaVersion: '1.0.0',
+  mutations: [
+    {
+      schemaVersion: '1.0.0',
+      id: 'mut_scorch_9999',
+      type: 'unknown_invalid_type', // Invalid type causes validation failure
+      surfaceId: 'terrain_main',
+      center: [0, 0, 0],
+      normal: [0, 1, 0],
+      radius: 2,
+      intensity: 1,
+      shape: 'circle',
+      createdAt: 0,
+      duration: 10,
+      seed: 9999,
+      transactionId: 'tx_9999',
+    },
+  ],
+});
+const failImportRes = tmMerge.importJson(badImportJson);
+assert.equal(failImportRes.ok, false, 'Bad import must fail');
+assert.equal(tmMerge.getIdCounter(), preFailIdCounter, 'Failed import must not advance idCounter');
+assert.equal(tmMerge.getTransactionCounter(), preFailTxCounter, 'Failed import must not advance transactionCounter');
+assert.equal(tmMerge.getActiveCount(), preFailActiveCount, 'Failed import must not change active count');
+
+const postFailMut = tmMerge.applyMutation({ type: 'crystal', center: [40, 0, 40], radius: 2 });
+assert.equal(postFailMut.id, 'mut_crystal_52', 'Post-fail mutation ID must continue from 51 -> 52, not 9999');
+
+// 22. [Requirement I] Verifies ordering and Map integrity across import, creation, undo, redo
+const tmIntegrity = new TerrainManager(scene);
+const exportDoc = tmMerge.exportDocument();
+tmIntegrity.mutationManager.importJson(JSON.stringify(exportDoc));
+const mBeforeUndo = tmIntegrity.applyMutation('golden_rune', new THREE.Vector3(50, 0, 50), 3);
+const countBefore = tmIntegrity.mutationManager.getActiveCount();
+const orderBefore = tmIntegrity.mutationManager.getMutations().map((m) => m.id);
+
+tmIntegrity.undo();
+const countAfterUndo = tmIntegrity.mutationManager.getActiveCount();
+const orderAfterUndo = tmIntegrity.mutationManager.getMutations().map((m) => m.id);
+assert.equal(countAfterUndo, countBefore - 1);
+assert.equal(orderAfterUndo.includes(mBeforeUndo.id), false, 'Undone ID must not be in ordered list');
+
+tmIntegrity.redo();
+const countAfterRedo = tmIntegrity.mutationManager.getActiveCount();
+const orderAfterRedo = tmIntegrity.mutationManager.getMutations().map((m) => m.id);
+assert.equal(countAfterRedo, countBefore);
+assert.deepEqual(orderAfterRedo, orderBefore, 'Redo must restore exact order');
+assert.equal(new Set(orderAfterRedo).size, orderAfterRedo.length, 'No duplicates in ordered list');
+assert.equal(tmIntegrity.mutationManager.getActiveCount(), orderAfterRedo.length, 'Active count matches order length');
+
+// 23. Verifies JSON state export produces valid schema-compliant string
 const tmExport = new TerrainManager(scene);
 tmExport.applyMutation('scorch', new THREE.Vector3(1, 0, 2), 3);
 tmExport.applyMutation('crystal', new THREE.Vector3(-1, 0, 3), 2.5);
@@ -210,7 +425,7 @@ const parseRes = parseMutationJson(exportedJson);
 assert.equal(parseRes.ok, true, 'Exported JSON must be valid');
 assert.equal(parseRes.document?.mutations.length, 3);
 
-// 18. Verifies JSON state import round-trip restores identical mutation records
+// 24. Verifies JSON state import round-trip restores identical mutation records
 const tmImport = new TerrainManager(scene);
 const importRes = tmImport.mutationManager.importJson(exportedJson);
 assert.equal(importRes.ok, true);
@@ -222,15 +437,7 @@ assert.equal(importedMutations[0].type, 'scorch');
 assert.equal(importedMutations[1].type, 'crystal');
 assert.equal(importedMutations[2].type, 'golden_rune');
 
-// 19. Verifies atomic import: invalid document does not corrupt or clear active state
-const tmAtomic = new TerrainManager(scene);
-tmAtomic.applyMutation('frost', new THREE.Vector3(5, 0, 5), 2);
-const preCount = tmAtomic.mutationManager.getActiveCount();
-const invalidImport = tmAtomic.mutationManager.importJson('{"bad": true}');
-assert.equal(invalidImport.ok, false, 'Invalid import must fail');
-assert.equal(tmAtomic.mutationManager.getActiveCount(), preCount, 'State must remain intact upon failed import');
-
-// 20. Verifies surfaceId resolution against allowed surface IDs
+// 25. Verifies surfaceId resolution against allowed surface IDs
 const allowed = new Set(['terrain_main', 'SurfaceValidationRamp']);
 const validSurfaceDoc: MutationDocument = {
   schemaVersion: '1.0.0',
@@ -238,7 +445,7 @@ const validSurfaceDoc: MutationDocument = {
     { ...validDoc.mutations[0], id: 'm_valid_surf', surfaceId: 'SurfaceValidationRamp' },
   ],
 };
-const resAllowed = tmAtomic.mutationManager.importJson(JSON.stringify(validSurfaceDoc), { allowedSurfaceIds: allowed });
+const resAllowed = tmIntegrity.mutationManager.importJson(JSON.stringify(validSurfaceDoc), { allowedSurfaceIds: allowed });
 assert.equal(resAllowed.ok, true, 'Allowed surfaceId must pass');
 
 const invalidSurfaceDoc: MutationDocument = {
@@ -247,12 +454,12 @@ const invalidSurfaceDoc: MutationDocument = {
     { ...validDoc.mutations[0], id: 'm_invalid_surf', surfaceId: 'non_existent_surface' },
   ],
 };
-const resDisallowed = tmAtomic.mutationManager.importJson(JSON.stringify(invalidSurfaceDoc), { allowedSurfaceIds: allowed });
+const resDisallowed = tmIntegrity.mutationManager.importJson(JSON.stringify(invalidSurfaceDoc), { allowedSurfaceIds: allowed });
 assert.equal(resDisallowed.ok, false, 'Unallowed surfaceId must fail');
 
-// 21. Verifies irregular-surface frame orientation
+// 26. Verifies irregular-surface frame orientation
 const rampNormal = new THREE.Vector3(0, 0.9659, 0.2588).normalize(); // ~15 deg tilt
-const rampHitMut = tmAtomic.applyMutation(
+const rampHitMut = tmIntegrity.applyMutation(
   'crystal',
   new THREE.Vector3(9, 1.2, -1),
   3,
@@ -267,4 +474,4 @@ assert.equal(rampHitMut.surfaceId, 'SurfaceValidationRamp');
 assert.ok(Math.abs(rampHitMut.normal[1] - rampNormal.y) < 1e-4);
 assert.ok(Math.abs(rampHitMut.normal[2] - rampNormal.z) < 1e-4);
 
-console.log('✅ ALL 21 MUTATION STATE & PERSISTENT TERRAFORMING CHECKS PASSED!');
+console.log('✅ ALL MUTATION STATE & PERSISTENT TERRAFORMING CHECKS PASSED (Requirements A-I Verified)!');
