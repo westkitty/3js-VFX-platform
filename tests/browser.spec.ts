@@ -250,8 +250,10 @@ test.describe('AetherVFX browser and runtime release gate', () => {
     await gotoTestMode(page);
     const result = await page.evaluate(async () => {
       const api = (window as any).__AETHERVFX_TEST_API__;
-      const { PerformanceHarness } = await import('/src/performance/PerformanceHarness.ts');
-      const { globalPerformanceRegistry } = await import('/src/performance/PerformanceScenarioRegistry.ts');
+      const performanceHarnessPath = '/src/performance/PerformanceHarness.ts';
+      const performanceRegistryPath = '/src/performance/PerformanceScenarioRegistry.ts';
+      const { PerformanceHarness } = await import(/* @vite-ignore */ performanceHarnessPath);
+      const { globalPerformanceRegistry } = await import(/* @vite-ignore */ performanceRegistryPath);
       const scenario = globalPerformanceRegistry.get('idle_baseline');
       const harness = new PerformanceHarness({
         engine: api.engine,

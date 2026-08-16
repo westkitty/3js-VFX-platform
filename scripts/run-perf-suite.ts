@@ -157,8 +157,10 @@ async function runBrowserReport(browser: Browser): Promise<any> {
         sequenceRuntime: api.sequenceRuntime,
         sequenceEmitter: api.sequenceEmitter,
       };
-      const { PerformanceHarness } = await import('/src/performance/PerformanceHarness.ts');
-      const { ScalingProfileHarness } = await import('/src/performance/ScalingProfileHarness.ts');
+      const performanceHarnessPath = '/src/performance/PerformanceHarness.ts';
+      const scalingHarnessPath = '/src/performance/ScalingProfileHarness.ts';
+      const { PerformanceHarness } = await import(/* @vite-ignore */ performanceHarnessPath);
+      const { ScalingProfileHarness } = await import(/* @vite-ignore */ scalingHarnessPath);
       const report = await new PerformanceHarness(context).runAll({ isSmoke: smoke });
       const scalingProfiles = await new ScalingProfileHarness(context).runAll(smoke);
       return { report, scalingProfiles };
