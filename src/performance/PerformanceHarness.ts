@@ -57,40 +57,23 @@ export class PerformanceHarness {
   }
 
   /**
-   * Prime renderer-owned lazy resources before scenario leak baselines are taken.
-   *
-   * The directional light's shadow-map render target is allocated only after the
-   * first shadow-casting object is rendered. Crystal residue is the first normal
-   * workload that casts a shadow, so without this prime the benchmark incorrectly
-   * attributes Three.js' persistent renderer-owned shadow texture to that scenario.
+   * Counts textures owned by persistent scene lights rather than by a benchmark
+   * scenario. Three.js allocates a light's shadow-map render target lazily when
+   * the first shadow-casting object appears, so raw renderer texture growth can
+   * otherwise misclassify that one-time renderer resource as a scenario leak.
    */
-  private async primeRendererOwnedResources(): Promise<void> {
-    const { engine } = this.ctx;
-    if (!engine.renderer.shadowMap.enabled) return;
-
-    const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-    const material = new THREE.MeshBasicMaterial({
-      color: 0x000000,
-      colorWrite: false,
-      depthWrite: false,
+  private countRendererOwnedShadowTextures(): number {
+    let count = 0;
+    this.ctx.engine.scene.traverse((object) => {
+      if (
+        object instanceof THREE.DirectionalLight ||
+        object instanceof THREE.SpotLight ||
+        object instanceof THREE.PointLight
+      ) {
+        if (object.shadow?.map?.texture) count += 1;
+      }
     });
-    const caster = new THREE.Mesh(geometry, material);
-    caster.name = 'PerformanceHarnessShadowPrime';
-    caster.castShadow = true;
-    caster.frustumCulled = false;
-    caster.position.set(0, 2, 0);
-    engine.scene.add(caster);
-
-    try {
-      engine.renderer.render(engine.scene, engine.camera);
-      await nextAnimationFrame();
-    } finally {
-      engine.scene.remove(caster);
-      geometry.dispose();
-      material.dispose();
-      engine.renderer.render(engine.scene, engine.camera);
-      await nextAnimationFrame();
-    }
+    return count;
   }
 
   /** Executes one scenario with fixed simulation semantics and real rendered frame intervals. */
@@ -127,6 +110,7 @@ export class PerformanceHarness {
 
       const baselineGeometries = this.ctx.engine.renderer.info.memory.geometries;
       const baselineTextures = this.ctx.engine.renderer.info.memory.textures;
+      const baselineShadowTextures = this.countRendererOwnedShadowTextures();
 
       // Start measurement on a fresh RAF boundary. Every sample is a complete
       // browser frame interval including simulation/update/render work and scheduling.
@@ -144,11 +128,14 @@ export class PerformanceHarness {
 
       const postGeometries = this.ctx.engine.renderer.info.memory.geometries;
       const postTextures = this.ctx.engine.renderer.info.memory.textures;
+      const postShadowTextures = this.countRendererOwnedShadowTextures();
       const leakedGeometries = Math.max(0, postGeometries - baselineGeometries);
-      const leakedTextures = Math.max(0, postTextures - baselineTextures);
+      const baselineScenarioTextures = Math.max(0, baselineTextures - baselineShadowTextures);
+      const postScenarioTextures = Math.max(0, postTextures - postShadowTextures);
+      const leakedTextures = Math.max(0, postScenarioTextures - baselineScenarioTextures);
 
       console.log(
-        `[ResourceCheck: ${config.id}] baseGeos=${baselineGeometries} -> postGeos=${postGeometries} (delta=${postGeometries - baselineGeometries}), baseTex=${baselineTextures} -> postTex=${postTextures} (delta=${postTextures - baselineTextures})`
+        `[ResourceCheck: ${config.id}] baseGeos=${baselineGeometries} -> postGeos=${postGeometries} (delta=${postGeometries - baselineGeometries}), baseTex=${baselineTextures} (shadow=${baselineShadowTextures}) -> postTex=${postTextures} (shadow=${postShadowTextures}), scenarioTexDelta=${postScenarioTextures - baselineScenarioTextures}`
       );
 
       const samples = collector.getSamples();
@@ -216,7 +203,6 @@ export class PerformanceHarness {
     this.ctx.engine.stop();
 
     try {
-      await this.primeRendererOwnedResources();
       this.ctx.engine.postFX?.triggerShake?.(0.01);
       this.ctx.engine.renderer.render(this.ctx.engine.scene, this.ctx.engine.camera);
       await nextAnimationFrame();
