@@ -57,23 +57,53 @@ export class PerformanceHarness {
   }
 
   /**
-   * Counts textures owned by persistent scene lights rather than by a benchmark
-   * scenario. Three.js allocates a light's shadow-map render target lazily when
-   * the first shadow-casting object appears, so raw renderer texture growth can
-   * otherwise misclassify that one-time renderer resource as a scenario leak.
+   * Prime renderer-owned lazy GPU resources before scenario leak baselines.
+   *
+   * Crystal residue is the first project path that renders MeshStandardMaterial.
+   * Three.js also owns fallback sampler textures and shadow render targets that are
+   * initialized lazily on first use. If that first use lands after a scenario's
+   * warm-up boundary, raw renderer.info growth is a false scenario leak.
+   *
+   * Render one disposable standard-material shadow caster up front, remove it,
+   * dispose only project-owned resources, then keep strict raw texture/geometric
+   * delta checks for every real scenario.
    */
-  private countRendererOwnedShadowTextures(): number {
-    let count = 0;
-    this.ctx.engine.scene.traverse((object) => {
-      if (
-        object instanceof THREE.DirectionalLight ||
-        object instanceof THREE.SpotLight ||
-        object instanceof THREE.PointLight
-      ) {
-        if (object.shadow?.map?.texture) count += 1;
-      }
+  private async primeRendererOwnedResources(): Promise<void> {
+    const { engine } = this.ctx;
+    const beforeGeometries = engine.renderer.info.memory.geometries;
+    const beforeTextures = engine.renderer.info.memory.textures;
+
+    const geometry = new THREE.BoxGeometry(0.25, 0.25, 0.25);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0x33e0ff,
+      roughness: 0.1,
+      metalness: 0.8,
+      emissive: 0x0088cc,
+      emissiveIntensity: 0.6,
     });
-    return count;
+    const caster = new THREE.Mesh(geometry, material);
+    caster.name = 'PerformanceHarnessRendererPrime';
+    caster.castShadow = true;
+    caster.frustumCulled = false;
+    caster.position.set(0, 2, 0);
+    engine.scene.add(caster);
+
+    try {
+      engine.renderer.render(engine.scene, engine.camera);
+      await nextAnimationFrame();
+    } finally {
+      engine.scene.remove(caster);
+      geometry.dispose();
+      material.dispose();
+      engine.renderer.render(engine.scene, engine.camera);
+      await nextAnimationFrame();
+    }
+
+    const afterGeometries = engine.renderer.info.memory.geometries;
+    const afterTextures = engine.renderer.info.memory.textures;
+    console.log(
+      `[ResourceCheck: renderer_prime] geos=${beforeGeometries}->${afterGeometries}, tex=${beforeTextures}->${afterTextures}`
+    );
   }
 
   /** Executes one scenario with fixed simulation semantics and real rendered frame intervals. */
@@ -110,7 +140,6 @@ export class PerformanceHarness {
 
       const baselineGeometries = this.ctx.engine.renderer.info.memory.geometries;
       const baselineTextures = this.ctx.engine.renderer.info.memory.textures;
-      const baselineShadowTextures = this.countRendererOwnedShadowTextures();
 
       // Start measurement on a fresh RAF boundary. Every sample is a complete
       // browser frame interval including simulation/update/render work and scheduling.
@@ -128,14 +157,11 @@ export class PerformanceHarness {
 
       const postGeometries = this.ctx.engine.renderer.info.memory.geometries;
       const postTextures = this.ctx.engine.renderer.info.memory.textures;
-      const postShadowTextures = this.countRendererOwnedShadowTextures();
       const leakedGeometries = Math.max(0, postGeometries - baselineGeometries);
-      const baselineScenarioTextures = Math.max(0, baselineTextures - baselineShadowTextures);
-      const postScenarioTextures = Math.max(0, postTextures - postShadowTextures);
-      const leakedTextures = Math.max(0, postScenarioTextures - baselineScenarioTextures);
+      const leakedTextures = Math.max(0, postTextures - baselineTextures);
 
       console.log(
-        `[ResourceCheck: ${config.id}] baseGeos=${baselineGeometries} -> postGeos=${postGeometries} (delta=${postGeometries - baselineGeometries}), baseTex=${baselineTextures} (shadow=${baselineShadowTextures}) -> postTex=${postTextures} (shadow=${postShadowTextures}), scenarioTexDelta=${postScenarioTextures - baselineScenarioTextures}`
+        `[ResourceCheck: ${config.id}] baseGeos=${baselineGeometries} -> postGeos=${postGeometries} (delta=${postGeometries - baselineGeometries}), baseTex=${baselineTextures} -> postTex=${postTextures} (delta=${postTextures - baselineTextures})`
       );
 
       const samples = collector.getSamples();
@@ -203,6 +229,7 @@ export class PerformanceHarness {
     this.ctx.engine.stop();
 
     try {
+      await this.primeRendererOwnedResources();
       this.ctx.engine.postFX?.triggerShake?.(0.01);
       this.ctx.engine.renderer.render(this.ctx.engine.scene, this.ctx.engine.camera);
       await nextAnimationFrame();
