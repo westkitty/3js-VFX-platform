@@ -1,7 +1,7 @@
 # Operational State: AetherVFX
 
 <!-- operational-state:metadata
-{"schema_version":1,"project_id":"aethervfx","project_name":"AetherVFX Ability and Procedural VFX Engine","project_root":".","artifact_path":"","state_revision":22,"last_updated":"2026-08-16T14:20:00Z","current_baseline":{"identity":"Phase 6 release-gate repair candidate; final release verification pending reference performance baseline","state":"repair-candidate","last_verified":"2026-08-16T14:20:00Z"},"scope_boundaries":["westkitty/3js-VFX-platform"],"linked_parent_state":null}
+{"schema_version":1,"project_id":"aethervfx","project_name":"AetherVFX Ability and Procedural VFX Engine","project_root":".","artifact_path":"","state_revision":23,"last_updated":"2026-08-18T18:30:40Z","current_baseline":{"identity":"Phase 6 release-gate repair candidate; PR CI green; final release verification pending headed reference performance baseline/regression and final main CI","state":"repair-candidate","last_verified":"2026-08-18T18:30:40Z"},"scope_boundaries":["westkitty/3js-VFX-platform"],"linked_parent_state":null}
 -->
 
 ## 1. Project Identity and Scope
@@ -17,39 +17,39 @@
 - Phase 3 verified checkpoint: `4704efd158f237b459d7b2008f06d743f74270c5` (SurfaceQuery, surface frame orientation, 5 indicator shapes, ramp/step fixture, in-app runtime validator).
 - Phase 4 verified checkpoint: `090c81335105bb2698005d88ec3163df66bede56` (versioned Ajv declarative ability schema, hardened registry, Ability Factory UI, 10 data-only abilities, deterministic semantic sequence runtime).
 - Phase 5 verified checkpoint: `628aa3037fee59054dccd6dc623ca9064dcf4e69` (full persistent aftermath & terraforming architecture: MutationManager with true undo/redo and counter reconciliation, ResidueManager, SurfaceQuery, TerrainDemo, 6 archetypes, JSON import/export, 64-budget cap, zero leaks).
-- **Phase 6 implementation is published but RELEASE VERIFICATION IS BLOCKED pending the corrected reference performance baseline/regression and final green main CI**:
-  1. Real Performance Lab Test Harness (`src/performance/PerformanceHarness.ts`, `src/performance/PerformanceMetricCollector.ts`, `src/performance/PerformanceBaselineComparator.ts`, `src/performance/PerformanceScenarioRegistry.ts`).
-  2. Ten deterministic performance scenarios (`idle_baseline`, `sequential_casts_100`, `concurrent_abilities_4`, `overload_burst`, `particle_scaling`, `residue_scaling`, `telegraphs_100`, `editor_open_active_mutation`, `freehand_path_workload`, `terrain_raycast_sweep`) executing with zero texture and geometry leaks.
-  3. Authoritative golden performance baseline recorded (`benchmarks/performance/baseline.json`) and automated regression comparator CLI (`scripts/run-perf-suite.ts`).
-  4. Playwright visual regression suite (`tests/visual.spec.ts`) with 8 deterministic golden snapshot fixtures comparing 3D viewport canvas states (`< 0.05` pixel diff).
-  5. Playwright browser functional and security boundary test suite (`tests/browser.spec.ts`) with bounded `window.__AETHERVFX_TEST_API__` restricted to `?testMode=1` / `?perfTest=1`.
-  6. Shader and material safety gate (`scripts/shader-safety-check.ts`) auditing custom GLSL shaders and preventing recompile bugs / cache key leaks.
-  7. GitHub Actions CI workflow (`.github/workflows/validate.yml`) validating all release gates.
-  8. Static preview build verified (`npm run build`, `dist/` verified).
-  9. Dependency, licensing, and provenance inventory complete (`LICENSE` Apache-2.0, `THIRD_PARTY_NOTICES.md`, `PROVENANCE.md`).
-  10. Authoritative release documentation (`README.md`).
+- **Phase 6 implementation is published and PR release-gate CI is green, but FINAL RELEASE VERIFICATION remains blocked pending the headed reference performance baseline/repeatability/regression and final green main CI**:
+  1. Real Performance Lab Test Harness (`src/performance/PerformanceHarness.ts`, `src/performance/MetricsCollector.ts`, `src/performance/PerformanceBaseline.ts`, `src/performance/PerformanceScenarioRegistry.ts`).
+  2. Ten deterministic performance scenarios (`idle_baseline`, `sequential_casts_100`, `concurrent_abilities_4`, `overload_burst`, `particle_scaling`, `residue_scaling`, `telegraphs_100`, `editor_open_active_mutation`, `freehand_path_workload`, `terrain_raycast_sweep`) plus discrete particle/residue scaling profiles pass the headless CI smoke lifecycle gate with zero raw texture and geometry leaks after renderer-owned lazy resources are initialized before scenario baselines.
+  3. Automated performance baseline/regression runner and comparator are implemented (`scripts/run-perf-suite.ts`), but the invalid old baseline was removed. No authoritative headed reference `benchmarks/performance/baseline.json` is currently approved; baseline creation, repeatability, and full regression remain pending.
+  4. Playwright visual regression suite (`tests/visual.spec.ts`) has 8 deterministic golden fixtures with <=2% diff tolerance; the Darwin visual gate is green on the current repair candidate.
+  5. Playwright browser functional and security boundary test suite (`tests/browser.spec.ts`) has bounded `window.__AETHERVFX_TEST_API__` restricted to `?testMode=1` / `?perfTest=1`; 8/8 browser tests pass on current PR CI.
+  6. Shader and material safety gate (`scripts/shader-safety-check.ts`) audits custom GLSL shaders and material cache safety and is green on current PR CI.
+  7. GitHub Actions CI workflow (`.github/workflows/validate.yml`) is green on repair-head PR run #9 (`32170579822`) for unit/schema/shader gates, production build, browser tests, performance smoke, static dist smoke, and Darwin visual regression.
+  8. Static production build and dist-only boot are verified by `npm run build` plus `npm run test:static` in current PR CI.
+  9. Dependency, licensing, and provenance inventory complete (`LICENSE` Apache-2.0, `LICENSE-MIT`, `THIRD_PARTY_NOTICES.md`, `PROVENANCE.md`).
+  10. Authoritative release documentation (`README.md`) reflects the repair-candidate release gate.
 
 ## 3. Artifact Contract
 
 - Make existing modes truthful before adding breadth.
-- Phases 1-5 remain verified. Phase 6 is a repair candidate until the corrected reference performance baseline/regression and final green main CI are recorded.
+- Phases 1-5 remain verified. Phase 6 is a repair candidate until the headed reference performance baseline/repeatability/regression and final green main CI are recorded.
 - Build/source/self-test presence is backed by actual browser execution and visual snapshot comparison.
 - Maintain full backward compatibility and zero resource leaks across all workloads.
 
 ## 4. Active Invariants
 
 <!-- operational-state:entry
-{"id":"INV-001","title":"Preserve seven-mode workbench","state":"verified","rule":"Keep all seven workbench modes visible while shallow paths become truthful working or explicitly staged paths.","scope":"Workbench shell","authority":"Accepted project assessment","evidence":"ROADMAP.md","validation_method":"Inspect mode routing after shell changes","last_checked":"revision 21","status":"active","recheck_trigger":"Navigation or mode-routing change"}
+{"id":"INV-001","title":"Preserve seven-mode workbench","state":"verified","rule":"Keep all seven workbench modes visible while shallow paths become truthful working or explicitly staged paths.","scope":"Workbench shell","authority":"Accepted project assessment","evidence":"ROADMAP.md","validation_method":"Inspect mode routing after shell changes","last_checked":"revision 23","status":"active","recheck_trigger":"Navigation or mode-routing change"}
 -->
 ### INV-001 — Preserve seven-mode workbench
 - **State:** `verified` — all seven modes (VFX Lab, Ability Factory, Macro Lab, Terraformer, Telegraphs, Freehand Drawing, Perf Lab) are truthful, functional, and browser-tested.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"INV-002","title":"No breadth before runtime truth","state":"verified","rule":"Do not add modes, schools, major effect families, or renderer migrations while the active phase gate is unverified.","scope":"All implementation","authority":"Accepted project assessment","evidence":"ROADMAP.md","validation_method":"Map each change to the active roadmap phase","last_checked":"revision 21","status":"active","recheck_trigger":"Explicit user direction change"}
+{"id":"INV-002","title":"No breadth before runtime truth","state":"verified","rule":"Do not add modes, schools, major effect families, or renderer migrations while the active phase gate is unverified.","scope":"All implementation","authority":"Accepted project assessment","evidence":"ROADMAP.md","validation_method":"Map each change to the active roadmap phase","last_checked":"revision 23","status":"active","recheck_trigger":"Explicit user direction change"}
 -->
 ### INV-002 — No breadth before runtime truth
-- **State:** `verified` — all 6 phases of the accepted ROADMAP are complete and verified.
+- **State:** `verified` — breadth remains locked: Phases 1-5 are verified; Phase 6 PR gates are green, but final release verification still requires the headed reference performance baseline/repeatability/regression and final main CI.
 <!-- /operational-state:entry -->
 
 ## 5. Verified Working Behavior
@@ -104,38 +104,38 @@
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"VER-018","title":"Phase 6 Performance Harness and 10 Deterministic Scenarios","state":"verified","capability":"Real Performance Lab harness runs 10 deterministic scenarios with fixed simulation deltas, p50/p95/p99 latency tracking, FPS, draw calls, geometry/texture counts, and strict zero-leak resource disposal verification.","scope":"Performance architecture and benchmarks","verification_method":"npm run test:perf and npm run test:perf:smoke in browser context","evidence":"benchmarks/performance/baseline.json, report-latest.json; 10/10 scenarios PASS with 0 memory/texture leaks","artifact_revision":"phase6-release-gates","last_verified":"2026-08-16T10:30:00Z","dependencies":"Playwright, WebGLRenderer","freshness":"current-session","recheck_trigger":"Performance scenarios, AbilityManager, ResidueManager, or EngineClock changes"}
+{"id":"VER-018","title":"Phase 6 Performance Harness Smoke and Lifecycle Gate","state":"verified","capability":"The real Performance Lab harness runs the ten deterministic roadmap scenarios plus discrete scaling profiles with fixed simulation deltas, RAF-to-RAF frame timing, p50/p95/p99 tracking, renderer counters, and strict raw zero-leak lifecycle checks after renderer-owned lazy resources are initialized before baselines.","scope":"Performance harness and CI smoke lifecycle gate","verification_method":"GitHub Actions PR run #9: npm run test:perf:smoke","evidence":"run 32170579822 on repair head da0986a (PR merge build 9f8ef35): renderer prime tex 2->3 before scenario baselines; all real scenarios then 3->3 with 0 leaked textures and 0 leaked geometries; smoke exits normally","artifact_revision":"da0986aef5135d2c82f1f1eebba4e95b23701435","last_verified":"2026-08-18T18:30:35Z","dependencies":"Playwright Chromium, WebGLRenderer","freshness":"current PR CI","recheck_trigger":"PerformanceHarness, performance scenarios, renderer/material path, AbilityManager, ResidueManager, or EngineClock changes"}
 -->
-### VER-018 — Phase 6 Performance Harness and 10 Deterministic Scenarios
-- **State:** `verified` — 10/10 deterministic performance scenarios pass with 0 leaked geometries and 0 leaked textures. Golden baseline saved to `benchmarks/performance/baseline.json`.
+### VER-018 — Phase 6 Performance Harness Smoke and Lifecycle Gate
+- **State:** `verified` — current PR CI smoke runs all roadmap/scaling workloads with strict raw zero resource-leak deltas and exits normally. The renderer-owned fallback texture is initialized before scenario baselines. **This does not substitute for the still-pending headed reference baseline/repeatability/regression.**
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"VER-019","title":"Phase 6 Deterministic Visual Regression Suite","state":"verified","capability":"Playwright visual regression suite renders 8 deterministic fixtures covering baseline scene, cone, circle, arrow line indicators, impact decals, terrain mutations, freehand drawing, and sequence indicators against golden snapshot PNGs.","scope":"Visual regression tests","verification_method":"npm run test:visual","evidence":"tests/visual.spec.ts, tests/visual.spec.ts-snapshots/ (8/8 fixtures PASS, maxDiffPixelRatio < 0.05)","artifact_revision":"phase6-release-gates","last_verified":"2026-08-16T10:35:42Z","dependencies":"Playwright Chromium","freshness":"current-session","recheck_trigger":"Shader, renderer, indicator geometry, or visual styling changes"}
+{"id":"VER-019","title":"Phase 6 Deterministic Visual Regression Suite","state":"verified","capability":"Playwright visual regression suite renders 8 deterministic fixtures covering baseline scene, cone, circle, arrow line indicators, impact decals, terrain mutations, freehand drawing, and sequence indicators against golden snapshot PNGs.","scope":"Visual regression tests","verification_method":"Darwin visual regression gate","evidence":"GitHub Actions PR run #9 (32170579822), visual-darwin PASS with reviewed deterministic goldens and <=2% diff tolerance","artifact_revision":"da0986aef5135d2c82f1f1eebba4e95b23701435","last_verified":"2026-08-18","dependencies":"Playwright Chromium on macOS","freshness":"current PR CI","recheck_trigger":"Shader, renderer, indicator geometry, or visual styling changes"}
 -->
 ### VER-019 — Phase 6 Deterministic Visual Regression Suite
-- **State:** `verified` — 8/8 visual regression fixtures pass comparison with golden snapshots.
+- **State:** `verified` — current repair-head Darwin visual regression gate passes all 8 reviewed deterministic fixtures.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"VER-020","title":"Phase 6 Browser & Runtime Security Boundaries","state":"verified","capability":"Playwright functional test suite verifies security boundaries (production route does not expose test APIs), test mode harness (?testMode=1), canvas startup, mode switches, casting, mutations, undo/redo, counter reconciliation, and sequence playback.","scope":"Browser runtime and security boundary","verification_method":"npm run test:browser","evidence":"tests/browser.spec.ts (8/8 PASS)","artifact_revision":"phase6-release-gates","last_verified":"2026-08-16T10:38:25Z","dependencies":"Playwright Chromium","freshness":"current-session","recheck_trigger":"App testApi wiring or mode routing changes"}
+{"id":"VER-020","title":"Phase 6 Browser & Runtime Security Boundaries","state":"verified","capability":"Playwright functional test suite verifies security boundaries (production route does not expose test APIs), test mode harness (?testMode=1), canvas startup, mode switches, casting, mutations, undo/redo, counter reconciliation, and sequence playback.","scope":"Browser runtime and security boundary","verification_method":"npm run test:browser in GitHub Actions PR run #9","evidence":"run 32170579822: 8/8 browser tests PASS","artifact_revision":"da0986aef5135d2c82f1f1eebba4e95b23701435","last_verified":"2026-08-18T18:23:09Z","dependencies":"Playwright Chromium","freshness":"current PR CI","recheck_trigger":"App testApi wiring or mode routing changes"}
 -->
 ### VER-020 — Phase 6 Browser & Runtime Security Boundaries
-- **State:** `verified` — 8/8 browser runtime tests pass with clean console and verified security boundaries.
+- **State:** `verified` — 8/8 browser runtime tests pass on current PR CI with the security boundary intact.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"VER-021","title":"Phase 6 Shader & Material Safety Gate","state":"verified","capability":"Shader safety gate audits all custom GLSL shaders (vertex/fragment pairs, uniform binding correctness) and ensures onBeforeCompile materials define customProgramCacheKey to prevent WebGL program recompile memory leaks.","scope":"Shaders and materials","verification_method":"npm run check:shader-safety","evidence":"scripts/shader-safety-check.ts (8 shader files, 72 source files PASS)","artifact_revision":"phase6-release-gates","last_verified":"2026-08-16T10:35:46Z","dependencies":"Node.js tsx","freshness":"current-session","recheck_trigger":"Shader or material updates"}
+{"id":"VER-021","title":"Phase 6 Shader & Material Safety Gate","state":"verified","capability":"Shader safety gate audits all custom GLSL shaders (vertex/fragment pairs, uniform binding correctness) and ensures onBeforeCompile materials define customProgramCacheKey to prevent WebGL program recompile memory leaks.","scope":"Shaders and materials","verification_method":"npm run check:shader-safety in GitHub Actions PR run #9","evidence":"run 32170579822: 8 shader files and 73 source files PASS","artifact_revision":"da0986aef5135d2c82f1f1eebba4e95b23701435","last_verified":"2026-08-18T18:22:43Z","dependencies":"Node.js tsx","freshness":"current PR CI","recheck_trigger":"Shader or material updates"}
 -->
 ### VER-021 — Phase 6 Shader & Material Safety Gate
-- **State:** `verified` — 0 shader syntax errors, 0 material cache key leaks.
+- **State:** `verified` — current PR CI reports 0 shader/material safety failures.
 <!-- /operational-state:entry -->
 
 <!-- operational-state:entry
-{"id":"VER-022","title":"Phase 6 CI Workflow, Packaging, and Documentation","state":"verified","capability":"Complete GitHub Actions CI pipeline (.github/workflows/validate.yml), Apache-2.0 LICENSE, THIRD_PARTY_NOTICES.md, PROVENANCE.md, and updated framework README.md. Static production build verified.","scope":"Release packaging and documentation","verification_method":"npm run build, npm run lint, npm test","evidence":"dist/ build artifacts, license files, README.md","artifact_revision":"phase6-release-gates","last_verified":"2026-08-16T10:38:00Z","dependencies":"Vite, TypeScript","freshness":"current-session","recheck_trigger":"Packaging or dependency changes"}
+{"id":"VER-022","title":"Phase 6 CI Workflow, Packaging, and Documentation","state":"verified","capability":"The repaired GitHub Actions PR pipeline validates unit/schema/shader gates, production build, browser tests, performance smoke, clean dist-only static boot, and Darwin visual regression; Apache-2.0 and upstream MIT provenance documents are present.","scope":"Release packaging, CI, and documentation","verification_method":"GitHub Actions PR run #9 plus dist-only Playwright smoke","evidence":"run 32170579822: validate SUCCESS, visual-darwin SUCCESS, static.spec.ts 1/1 PASS; LICENSE, LICENSE-MIT, THIRD_PARTY_NOTICES.md, PROVENANCE.md, README.md present","artifact_revision":"da0986aef5135d2c82f1f1eebba4e95b23701435","last_verified":"2026-08-18T18:30:40Z","dependencies":"Vite, TypeScript, Playwright, GitHub Actions","freshness":"current PR CI","recheck_trigger":"Packaging, CI workflow, dependency, or release documentation changes"}
 -->
 ### VER-022 — Phase 6 CI Workflow, Packaging, and Documentation
-- **State:** `verified` — production bundle builds cleanly in 4.99s, typecheck passes with 0 errors, comprehensive documentation and legal files present.
+- **State:** `verified` — repair-head PR CI is fully green, including clean static-dist boot; this verifies the PR gate, not the still-pending headed reference performance baseline or post-merge main CI.
 <!-- /operational-state:entry -->
 
 ## 11. Validation and Evidence Matrix
@@ -152,17 +152,17 @@
 | VER-015 | verified pure + browser | `check:sequence-runtime`, `check:world-effects`, declarative abilityId integration | rerun after TerrainManager, WorldMarkBridge, SequenceSchema |
 | VER-016 | verified pure + browser | `check:mutation-state` (21/21 checks), modular Phase 5 persistent aftermath architecture | rerun after MutationManager, ResidueManager, TerrainDemo |
 | VER-017 | verified pure + browser | Mutation redo exact restoration, import ID counter reconciliation | rerun after MutationManager transaction/import logic changes |
-| VER-018 | verified performance suite | `npm run test:perf` (10/10 scenarios PASS with 0 resource leaks, baseline saved) | rerun `npm run test:perf` after rendering or ability updates |
-| VER-019 | verified visual regression | `npm run test:visual` (8/8 golden snapshots PASS, diff < 0.05) | rerun `npm run test:visual` after shader or visual styling changes |
-| VER-020 | verified browser suite | `npm run test:browser` (8/8 functional tests PASS, security boundaries verified) | rerun `npm run test:browser` after App wiring changes |
-| VER-021 | verified shader safety | `npm run check:shader-safety` (8 shaders, 72 source files PASS) | rerun `npm run check:shader-safety` after GLSL shader changes |
-| VER-022 | verified packaging | `npm run build`, `npm run lint`, `.github/workflows/validate.yml`, `LICENSE`, `THIRD_PARTY_NOTICES.md` | rerun after dependency or CI workflow changes |
+| VER-018 | verified PR smoke lifecycle gate | run #9: renderer prime owns one-time 2->3 texture initialization; all real scenarios/profiles then raw 3->3 with 0 leaks; smoke exits normally | create headed reference baseline/repeatability, then run matched full regression; rerun smoke after rendering/lifecycle changes |
+| VER-019 | verified visual regression | run #9 Darwin visual gate PASS on 8 reviewed deterministic fixtures, <=2% tolerance | rerun `npm run test:visual` after shader or visual styling changes |
+| VER-020 | verified browser suite | run #9 `npm run test:browser` 8/8 PASS, security boundaries verified | rerun `npm run test:browser` after App wiring changes |
+| VER-021 | verified shader safety | run #9 `npm run check:shader-safety` PASS (8 shaders, 73 source files) | rerun after GLSL shader/material changes |
+| VER-022 | verified PR CI/static packaging | run #9 validate + Darwin SUCCESS; dist-only static smoke 1/1 PASS; licensing/provenance present | headed reference performance proof, then merge and require final main CI green |
 
 ## 12. Current Change Scope and Impact Radius
 
-- **Platform Status:** Phases 1-5 are **VERIFIED COMPLETE**. Phase 6 source is implemented and under repaired release-gate validation; release status remains blocked pending the corrected reference performance baseline/regression and final green main CI.
-- **Unified Test Gate:** `npm test` executes the complete release verification pipeline (domain checks, shader safety, performance smoke, browser functional tests, visual regression).
-- **Production Build:** Vite production bundle passes with zero errors and zero unexposed internal testing hooks.
+- **Platform Status:** Phases 1-5 are **VERIFIED COMPLETE**. Phase 6 repair-head PR CI is **GREEN**; final release status remains blocked only on the authoritative headed reference performance baseline/repeatability/regression and final green main CI.
+- **Test Entry Points:** `npm test` intentionally runs the pure/unit release checks only (`test:unit`). Browser, visual, performance, static, and local full-release paths remain explicit scripts (`test:browser`, `test:visual`, `test:perf`, `test:perf:baseline`, `test:perf:smoke`, `test:static`, `test:release-local`).
+- **Production Build:** Vite production bundle and clean dist-only boot pass. Current bundle still emits a non-blocking >500 kB chunk-size warning.
 
 ## 13. Compact Revision Log
 
@@ -185,3 +185,4 @@
 | 20 | **Phase 5 complete: Mutation redo and import ID reconciliation repair.** Repaired `MutationManager.redo()` to fully restore undone `MutationRecord` snapshots. Repaired `MutationManager.importJson()` to reconcile `idCounter` and `transactionCounter`. |
 | 21 | **Phase 6 implementation checkpoint (later found to overclaim release verification).** Performance/visual/CI/provenance source was published, but post-publication audit found failed final CI, invalid frame timing/baseline identity, nondeterministic visual fixtures/tolerance, discrete scaling gaps, and incomplete upstream MIT provenance. |
 | 22 | **Phase 6 release-gate repair candidate.** Corrected CI ordering, RAF-to-RAF performance timing with fixed-step simulation, build identity, discrete scaling profiles, deterministic <=2% visual fixtures, dist-only static smoke, and upstream MIT notice/provenance. Invalid old benchmark JSON was removed. Release remains blocked until the headed reference performance baseline/repeatability/regression evidence is generated for this repair source and final main CI is green. |
+| 23 | **Phase 6 PR release gates green.** Repaired benchmark server shutdown and renderer-owned lazy texture accounting without whitelisting leaks: a disposable MeshStandardMaterial/shadow preflight initializes Three.js renderer fallback resources before scenario baselines (`tex 2->3`), then every real roadmap/scaling workload remains raw `3->3` with zero leaks. PR CI run #9 (`32170579822`) passed unit/schema/shader, build, 8/8 browser tests, performance smoke, 1/1 clean static-dist smoke, and Darwin visual regression. Corrected stale claims that a headed golden performance baseline already exists or that `npm test` runs the entire release pipeline. Final release verification still requires headed reference baseline/repeatability/regression and final green main CI. |
