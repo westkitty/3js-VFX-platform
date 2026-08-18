@@ -1,54 +1,53 @@
-# Third-Party Software Notices and Information
+# Third-Party and Upstream Notices
 
-This package includes software licensed under open-source licenses:
+This file records **direct** project dependencies and the upstream source from
+which AetherVFX was derived. Transitive npm dependency license metadata remains
+available in `package-lock.json`.
 
-## 1. three (v0.185.0)
-- **License**: MIT
-- **Copyright**: (c) 2010-2026 three.js authors
-- **URL**: https://github.com/mrdoob/three.js
-- **Notice**:
-```text
-The MIT License
+## Upstream source — LinearAbiltyCastingThreeJS
 
-Copyright © 2010-2026 three.js authors
+- Repository: `achrefelouafi/LinearAbiltyCastingThreeJS`
+- Upstream license: **MIT**
+- Upstream copyright: **Copyright (c) 2026 mohamedachrefelouafi**
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+The upstream MIT notice is preserved verbatim in `LICENSE-MIT`.
+AetherVFX's later Apache-2.0-marked contributions do not replace that upstream
+notice for derived material.
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-```
+## Direct runtime dependencies
 
-## 2. react & react-dom (v18.3.1)
-- **License**: MIT
-- **Copyright**: (c) Meta Platforms, Inc. and affiliates.
-- **URL**: https://github.com/facebook/react
+Versions below are the manifest constraints in `package.json`; the lockfile is
+the authority for the exact installed package graph.
 
-## 3. lucide-react (v0.475.0)
-- **License**: ISC
-- **Copyright**: (c) 2022-2026 Lucide Contributors
-- **URL**: https://github.com/lucide-icons/lucide
+| Package | Manifest version | License family |
+|---|---:|---|
+| `three` | `^0.185.1` | MIT |
+| `react` | `^19.0.1` | MIT |
+| `react-dom` | `^19.0.1` | MIT |
+| `lucide-react` | `^0.546.0` | ISC |
+| `ajv` | `^8.20.0` | MIT |
+| `vite` | `^6.2.3` | MIT |
+| `@vitejs/plugin-react` | `^5.0.4` | MIT |
+| `tailwindcss` | `^4.1.14` | MIT |
+| `@tailwindcss/vite` | `^4.1.14` | MIT |
+| `@types/three` | `^0.185.4` | MIT |
 
-## 4. vite (v6.2.0)
-- **License**: MIT
-- **Copyright**: (c) 2019-present Yuxi (Evan) You & Vite Contributors
-- **URL**: https://github.com/vitejs/vite
+## Direct development dependencies
 
-## 5. tailwindcss (v4.0.0)
-- **License**: MIT
-- **Copyright**: (c) Tailwind Labs, Inc.
-- **URL**: https://github.com/tailwindlabs/tailwindcss
+| Package | Manifest version | License family |
+|---|---:|---|
+| `@playwright/test` | `^1.62.1` | Apache-2.0 |
+| `playwright` | `^1.62.1` | Apache-2.0 |
+| `typescript` | `~5.8.2` | Apache-2.0 |
+| `tsx` | `^4.21.0` | MIT |
+| `esbuild` | `^0.25.0` | MIT |
+| `autoprefixer` | `^10.4.21` | MIT |
+| `@types/node` | `^22.14.0` | MIT |
 
-## 6. vitest (v3.0.5)
-- **License**: MIT
-- **Copyright**: (c) 2021-present Anthony Fu and Vitest contributors
-- **URL**: https://github.com/vitest-dev/vitest
+There is **no Vitest dependency** in the current manifest. Historical notices
+that listed Vitest or older React/Three/Vite/Tailwind versions were stale and
+have been removed.
 
-## 7. @playwright/test & playwright (v1.62.1)
-- **License**: Apache-2.0
-- **Copyright**: (c) Microsoft Corporation
-- **URL**: https://github.com/microsoft/playwright
+This notice is an inventory, not legal advice. For redistribution, preserve
+applicable license files/notices and verify the lockfile package graph used for
+the release being distributed.

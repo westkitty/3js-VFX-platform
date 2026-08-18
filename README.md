@@ -1,126 +1,155 @@
-# AetherVFX — Deterministic 3D WebGL Ability & VFX Platform
+# AetherVFX — Deterministic Three.js Ability & Procedural VFX Framework
 
-**AetherVFX** is a production-ready, deterministic 3D spell-casting, targeting telegraph, persistent world mutation, and visual effects (VFX) framework built on Three.js, React, and TypeScript.
+AetherVFX is a Three.js + React + TypeScript workbench for deterministic ability
+casting, procedural VFX, targeting telegraphs, surface-aware freehand paths,
+semantic multi-stage sequences, persistent aftermath, and terrain mutation.
 
----
+The seven protected workbench modes are:
 
-## 🌟 Core Architecture & Systems
+1. VFX Laboratory
+2. Ability Factory
+3. Macro Sandbox
+4. Terraformer
+5. Telegraph Lab
+6. Freehand Caster
+7. Performance Lab
 
-AetherVFX provides a layered, decoupled game engine architecture with explicit resource ownership and deterministic time progression:
+## Current release status
 
-1. **Deterministic Runtime Spine (`src/core/Engine.ts`, `src/core/EngineClock.ts`)**:
-   - Simulation time is completely decoupled from wall-clock rendering.
-   - Stepped frame advances yield identical state across headless benchmark suites and interactive viewports.
-   - Seeded deterministic PRNG (`src/core/SeededRandom.ts`) controls all particle spread, sequence bearings, and visual jitter.
+Phases 1–5 are verified checkpoints. Phase 6 adds performance measurement,
+visual regression, project-local Playwright tests, static-release checks, CI,
+and provenance gates. **Do not call a commit release-verified merely because the
+Phase 6 source exists.** Release status is governed by `OPERATIONAL_STATE.md` and
+requires a passing reference performance baseline, deterministic visual goldens,
+clean static build proof, and green final CI.
 
-2. **Surface & Terrain Geometry Authority (`src/core/SurfaceQuery.ts`, `src/core/SurfaceFrameModel.ts`)**:
-   - Raycasting, projection, and local surface-normal orientation.
-   - Conformal frame mapping guarantees targeting telegraphs and ground decals conform cleanly to horizontal, sloped, and uneven terrain geometry.
+## Requirements
 
-3. **Targeting Indicators & Telegraphs (`src/indicators/`)**:
-   - Deterministic procedural outlines for 5 geometric archetypes: `circle`, `cone`, `line`, `ring`, and `arrow`.
-   - Multi-phase telegraph animation lifecycle (`warning` -> `commit` -> `active`).
+- Node.js 20 is the CI reference runtime.
+- npm with the committed `package-lock.json`.
+- Chromium installed through Playwright for browser tests:
 
-4. **Data-Driven Ability Schema & Runtime (`src/abilities/`, `src/schema/AbilitySchema.ts`)**:
-   - JSON-declarative ability definitions validated against strict JSON Schemas.
-   - Zero hardcoded logic: spells configure particle count, projectile speed, trajectory arcs, impact bursts, and area-of-effect fields purely through data.
-
-5. **Semantic Multi-Stage Sequence Engine (`src/sequence/`)**:
-   - Declarative composition of complex combos (`emit`, `travel`, `impact`, `field`, `residue`, `wait`, `parallel`, `sequence`).
-   - Integrated semantic link: sequence nodes trigger registered ability IDs directly through the global registry.
-
-6. **Persistent Aftermath & Terraforming (`src/mutation/`, `src/terrain/`)**:
-   - Authoritative world-state mutations (`scorch`, `frost`, `lava`, `crystal`, `void_scar`, `golden_rune`).
-   - Real-time vertex height deformation (`TerrainDemo`) paired with visual decals and props (`ResidueManager`).
-   - Atomic transactions, true undo/redo history, budget caps, schema-validated JSON import/export, and ID counter reconciliation.
-
-7. **Deterministic Performance Lab (`src/performance/`, `benchmarks/performance/`)**:
-   - Headless and browser-executed benchmark harness with 10 deterministic workload scenarios.
-   - Automated baseline comparison, p50/p95/p99 latency tracking, draw call and triangle metrics, and zero-leak WebGL resource enforcement.
-
-8. **Visual Regression Fixture Suite (`tests/visual.spec.ts`)**:
-   - 8 deterministic visual fixtures verified with pixel-level Playwright snapshot comparisons.
-
----
-
-## 🚀 Quickstart & Development
-
-### Prerequisites
-- Node.js (v18+)
-- npm (v9+)
-
-### Installation
 ```bash
-git clone https://github.com/westkitty/3js-VFX-platform.git
-cd 3js-VFX-platform
-npm install
+npm ci
+npx playwright install chromium
 ```
 
-### Run Local Development Server
+On Linux CI, `npx playwright install --with-deps chromium` installs system
+browser dependencies as well.
+
+## Development
+
 ```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
 
----
+Default development route: `http://localhost:3000/`.
 
-## 🧪 Verification & Release Testing
+The default route does not expose the test API. Test-only routes such as
+`?testMode=1`, `?surfaceFixture=1`, and `?perfTest=1` exist solely for automated
+validation.
 
-AetherVFX enforces strict quality, safety, and performance gates across the entire platform.
+## Validation commands
 
-### Run Unified Test Suite
 ```bash
-npm test
+npm run test:unit
+npm run build
+npm run test:browser
+npm run test:visual
+npm run test:perf:smoke
+npm run test:static
 ```
 
-### Individual Quality & Release Gates
+`npm test` intentionally aliases the pure/unit-style gate. Browser installation
+is an explicit prerequisite rather than a hidden side effect of `npm test`.
 
-| Command | Description |
-| :--- | :--- |
-| `npm run check:runtime-spine` | Verifies EngineClock determinism, time decoupling, and pause invariance. |
-| `npm run check:source-graph` | Audits module dependency boundaries and circular import prevention. |
-| `npm run check:indicator-model` | Validates telegraph geometry calculations, clamping, and phase progression. |
-| `npm run check:surface-frame` | Asserts surface tangent frame calculations across normal topologies. |
-| `npm run check:ability-schema` | Validates ability JSON schemas, injection guards, and atomic migrations. |
-| `npm run check:sequence-runtime` | Tests sequence ordering, parallel branching, time-budgeted execution, and determinism. |
-| `npm run check:world-effects` | Audits residue lifecycle, expiration, budget capping, and texture cleanup. |
-| `npm run check:mutation-state` | Tests mutation transactions, undo/redo parity, terrain deformation, and counter reconciliation. |
-| `npm run check:shader-safety` | Audits custom GLSL shaders and prevents runtime recompilations / cache key leaks. |
-| `npm run test:perf:smoke` | Fast smoke test of all 10 deterministic performance scenarios with leak checks. |
-| `npm run test:perf` | Authoritative performance suite with baseline regression comparison. |
-| `npm run test:browser` | Playwright browser functional and security boundary test suite. |
-| `npm run test:visual` | Playwright visual regression suite comparing 8 golden snapshot fixtures. |
-| `npm run lint` | TypeScript typecheck (`tsc --noEmit`). |
-| `npm run build` | Production bundle build via Vite. |
+### Pure/static checks
 
----
+- `npm run lint`
+- `npm run check:runtime-spine`
+- `npm run check:source-graph`
+- `npm run check:indicator-model`
+- `npm run check:surface-frame`
+- `npm run check:ability-schema`
+- `npm run check:sequence-runtime`
+- `npm run check:world-effects`
+- `npm run check:mutation-state`
+- `npm run check:shader-safety`
 
-## 📊 Deterministic Performance Scenarios
+### Browser and visual checks
 
-The performance harness executes 10 reproducible scenarios under fixed simulation deltas:
+- `npm run test:browser` — protected runtime/user-path regression suite.
+- `npm run test:visual` — deterministic fixed-step visual snapshots.
+- `npm run test:visual:update` — intentionally regenerates the current platform's
+  visual goldens; review the resulting image diff before accepting it.
+- `npm run test:static` — builds must already exist; serves **only `dist/`** with
+  a plain static HTTP server and checks startup, all seven modes, test-API
+  absence, console errors, and failed requests.
 
-1. `idle_baseline`: Empty baseline scene evaluation.
-2. `sequential_casts_100`: High-frequency sequential ability casting.
-3. `concurrent_abilities_4`: 4 simultaneous overlapping spells.
-4. `overload_burst`: Heavy multi-entity particle burst stress test.
-5. `particle_scaling`: Large-scale particle system simulation.
-6. `residue_scaling`: Maximum budget aftermath residue and decal rendering.
-7. `telegraphs_100`: 100 concurrent surface-conforming targeting indicators.
-8. `editor_open_active_mutation`: Interactive mutation and sculpting state under active rendering.
-9. `freehand_path_workload`: Continuous Catmull-Rom spline stroke generation and surface projection.
-10. `terrain_raycast_sweep`: Intensive surface query raycast sweeping across deformed terrain.
+Visual fixtures use exact EngineClock steps, not wall-clock sleeps. The maximum
+allowed pixel-diff ratio is 0.02.
 
----
+## Performance gate
 
-## 🔒 Security & Safe Runtime Boundaries
+`npm run test:perf:smoke` is a headless semantic/lifecycle smoke test suitable
+for CI. It is **not** the authoritative hardware performance baseline.
 
-- In production builds (`/`), internal engine instances and testing APIs are completely unexposed.
-- Bounded test APIs (`window.__AETHERVFX_TEST_API__`) are gated strictly behind explicit test routes (`?testMode=1` / `?perfTest=1`).
+The local reference performance workflow is:
 
----
+```bash
+npm run test:perf:baseline
+npm run test:perf
+```
 
-## 📄 License & Attribution
+`test:perf:baseline` runs headed Chromium in the reference environment, records
+two independent full runs, performs one bounded third run only if repeatability
+exceeds 10%, and writes `baseline-repeatability.json` only when the selected pair
+is stable. `test:perf` then performs an independent same-environment regression
+run and enforces the relative thresholds.
 
-- Source code licensed under [Apache-2.0](LICENSE).
-- Third-party open-source components and licensing attributions are documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-- Architecture origin and phased development provenance are tracked in [PROVENANCE.md](PROVENANCE.md).
+The benchmark records actual requestAnimationFrame-to-requestAnimationFrame wall
+time while simulation advances through fixed EngineClock steps. It also records
+renderer/resource counts and six discrete scaling profiles in addition to the ten
+roadmap scenarios:
+
+- particles: 1,000 / 10,000 / 50,000
+- residues: 100 / 500 / 2,000
+
+Performance reports include viewport, DPR, browser/user agent, WebGL renderer,
+Three.js revision, and the source commit injected by Vite at build/dev startup.
+Incompatible environments are reported as mismatches, not regressions.
+
+## Static production build
+
+```bash
+npm run build
+python3 -m http.server 4173 --directory dist
+```
+
+The decisive static check is `npm run test:static`, which opens the `dist/`
+output through a plain HTTP server rather than Vite's development transforms.
+
+## Architecture anchors
+
+- `src/core/EngineClock.ts` — simulation-time authority.
+- `src/core/SeededRandom.ts` — deterministic random source.
+- `src/abilities/AbilityRegistry.ts` — validated ability identity/admission.
+- `src/sequence/` — deterministic semantic sequence runtime.
+- `src/core/SurfaceQuery.ts` — surface geometry authority.
+- `src/mutation/MutationManager.ts` — persistent mutation state/transactions.
+- `src/terrain/ResidueManager.ts` — visual aftermath ownership/disposal.
+- `src/performance/` — benchmark metrics, scenarios, scaling profiles, baseline comparison.
+
+## Licensing and provenance
+
+This project is derived from MIT-licensed `achrefelouafi/LinearAbiltyCastingThreeJS`.
+The upstream MIT notice is preserved in `LICENSE-MIT`. AetherVFX files/contributions
+with Apache-2.0 SPDX headers are additionally marked Apache-2.0. See:
+
+- `LICENSE` (Apache-2.0 text for Apache-marked contributions)
+- `LICENSE-MIT` (preserved upstream MIT notice)
+- `THIRD_PARTY_NOTICES.md`
+- `PROVENANCE.md`
+
+Those files preserve the upstream notice instead of incorrectly relabeling the
+upstream project as Apache-only.

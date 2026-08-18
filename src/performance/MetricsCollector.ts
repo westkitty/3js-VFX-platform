@@ -14,6 +14,9 @@ import {
   MetricSummary,
 } from './PerformanceTypes';
 
+declare const __AETHERVFX_BUILD_COMMIT__: string;
+declare const __AETHERVFX_BUILD_VERSION__: string;
+
 export class MetricsCollector {
   private samples: MetricsSample[] = [];
   private warmupSamples: MetricsSample[] = [];
@@ -34,6 +37,8 @@ export class MetricsCollector {
   public recordSample(
     frameDurationMs: number,
     extra?: {
+      activeParticles?: number;
+      activeSpells?: number;
       activeMutations?: number;
       visualDecals?: number;
     }
@@ -53,9 +58,9 @@ export class MetricsCollector {
       points: info.render.points,
       memoryGeometries: info.memory.geometries,
       memoryTextures: info.memory.textures,
-      activeParticles: liveMetrics.particlesCount,
+      activeParticles: extra?.activeParticles ?? liveMetrics.particlesCount,
       activeLights: poolStats.activeLights,
-      activeSpells: liveMetrics.activeSpells,
+      activeSpells: extra?.activeSpells ?? liveMetrics.activeSpells,
       activeMutations: extra?.activeMutations ?? 0,
       visualDecals: extra?.visualDecals ?? liveMetrics.decalsCount,
       pooledLights: poolStats.pooledLights,
@@ -131,6 +136,8 @@ export class MetricsCollector {
     const nav = typeof navigator !== 'undefined' ? navigator : { userAgent: 'node', platform: 'node' };
     const win = typeof window !== 'undefined' ? window : { innerWidth: 1920, innerHeight: 1080, devicePixelRatio: 1 };
     const doc = typeof document !== 'undefined' ? document : { visibilityState: 'visible' };
+    const buildCommit = typeof __AETHERVFX_BUILD_COMMIT__ !== 'undefined' ? __AETHERVFX_BUILD_COMMIT__ : 'unknown';
+    const buildVersion = typeof __AETHERVFX_BUILD_VERSION__ !== 'undefined' ? __AETHERVFX_BUILD_VERSION__ : 'unknown';
 
     return {
       os: nav.platform || 'Unknown OS',
@@ -142,8 +149,8 @@ export class MetricsCollector {
       viewportHeight: win.innerHeight || 1080,
       devicePixelRatio: win.devicePixelRatio || 1,
       threeVersion: `r${THREE.REVISION}`,
-      buildCommit: '628aa30',
-      buildVersion: '2.4.0',
+      buildCommit,
+      buildVersion,
       visibilityState: doc.visibilityState || 'visible',
     };
   }

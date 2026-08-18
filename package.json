@@ -18,11 +18,16 @@
     "check:world-effects": "tsx scripts/world-effects-check.ts",
     "check:mutation-state": "tsx scripts/mutation-state-check.ts",
     "check:shader-safety": "tsx scripts/shader-safety-check.ts",
-    "test": "npm run check:runtime-spine && npm run check:source-graph && npm run check:indicator-model && npm run check:surface-frame && npm run check:ability-schema && npm run check:sequence-runtime && npm run check:world-effects && npm run check:mutation-state && npm run check:shader-safety && npm run test:perf:smoke && npm run test:browser && npm run test:visual",
+    "test": "npm run test:unit",
+    "test:unit": "npm run lint && npm run check:runtime-spine && npm run check:source-graph && npm run check:indicator-model && npm run check:surface-frame && npm run check:ability-schema && npm run check:sequence-runtime && npm run check:world-effects && npm run check:mutation-state && npm run check:shader-safety",
     "test:perf": "tsx scripts/run-perf-suite.ts",
+    "test:perf:baseline": "tsx scripts/run-perf-suite.ts --update-baseline",
     "test:perf:smoke": "tsx scripts/run-perf-suite.ts --smoke",
     "test:browser": "playwright test tests/browser.spec.ts",
-    "test:visual": "playwright test tests/visual.spec.ts"
+    "test:visual": "playwright test tests/visual.spec.ts",
+    "test:visual:update": "playwright test tests/visual.spec.ts --update-snapshots",
+    "test:static": "playwright test tests/static.spec.ts --config=playwright.static.config.ts",
+    "test:release-local": "npm run test:unit && npm run build && npm run test:browser && npm run test:visual && npm run test:perf && npm run test:static"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
