@@ -9,6 +9,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import * as THREE from 'three';
 import { MetricsCollector } from './MetricsCollector';
 import { PerformanceContext, PerformanceScenario } from './PerformanceScenario';
 import { globalPerformanceRegistry } from './PerformanceScenarioRegistry';
@@ -55,6 +56,43 @@ export class PerformanceHarness {
     });
   }
 
+  /**
+   * Prime renderer-owned lazy resources before scenario leak baselines are taken.
+   *
+   * The directional light's shadow-map render target is allocated only after the
+   * first shadow-casting object is rendered. Crystal residue is the first normal
+   * workload that casts a shadow, so without this prime the benchmark incorrectly
+   * attributes Three.js' persistent renderer-owned shadow texture to that scenario.
+   */
+  private async primeRendererOwnedResources(): Promise<void> {
+    const { engine } = this.ctx;
+    if (!engine.renderer.shadowMap.enabled) return;
+
+    const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+    const material = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      colorWrite: false,
+      depthWrite: false,
+    });
+    const caster = new THREE.Mesh(geometry, material);
+    caster.name = 'PerformanceHarnessShadowPrime';
+    caster.castShadow = true;
+    caster.frustumCulled = false;
+    caster.position.set(0, 2, 0);
+    engine.scene.add(caster);
+
+    try {
+      engine.renderer.render(engine.scene, engine.camera);
+      await nextAnimationFrame();
+    } finally {
+      engine.scene.remove(caster);
+      geometry.dispose();
+      material.dispose();
+      engine.renderer.render(engine.scene, engine.camera);
+      await nextAnimationFrame();
+    }
+  }
+
   /** Executes one scenario with fixed simulation semantics and real rendered frame intervals. */
   public async runScenario(
     scenario: PerformanceScenario,
@@ -77,7 +115,7 @@ export class PerformanceHarness {
       collector.startWarmup();
       let frameIndex = 0;
 
-      // Warm up all lazy GPU/program/resource paths before establishing leak baseline.
+      // Warm up all scenario-owned lazy GPU/program/resource paths before establishing leak baseline.
       let previousTimestamp = await nextAnimationFrame();
       for (let i = 0; i < warmupFrames; i++) {
         this.advanceScenarioFrame(scenario, frameIndex++);
@@ -178,6 +216,7 @@ export class PerformanceHarness {
     this.ctx.engine.stop();
 
     try {
+      await this.primeRendererOwnedResources();
       this.ctx.engine.postFX?.triggerShake?.(0.01);
       this.ctx.engine.renderer.render(this.ctx.engine.scene, this.ctx.engine.camera);
       await nextAnimationFrame();

@@ -51,6 +51,7 @@ async function ensureDevServer(): Promise<ChildProcess | null> {
     cwd: ROOT,
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, DISABLE_HMR: 'true' },
+    detached: process.platform !== 'win32',
   });
 
   let stderr = '';
@@ -65,13 +66,48 @@ async function ensureDevServer(): Promise<ChildProcess | null> {
     await sleep(250);
   }
 
-  child.kill('SIGTERM');
+  await stopServer(child);
   throw new Error(`Timed out waiting for benchmark server at ${baseUrl}: ${stderr.slice(-2000)}`);
 }
 
-function stopServer(child: ChildProcess | null): void {
-  if (!child || child.exitCode !== null) return;
-  child.kill('SIGTERM');
+function waitForExit(child: ChildProcess, timeoutMs: number): Promise<boolean> {
+  if (child.exitCode !== null || child.signalCode !== null) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (value: boolean) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      child.off('exit', onExit);
+      resolve(value);
+    };
+    const onExit = () => finish(true);
+    const timer = setTimeout(() => finish(false), timeoutMs);
+    child.once('exit', onExit);
+  });
+}
+
+function signalServerTree(child: ChildProcess, signal: NodeJS.Signals): void {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  try {
+    if (process.platform !== 'win32' && child.pid) {
+      // ensureDevServer starts npm detached so its shell/Vite descendants share
+      // this dedicated process group. Signal the whole group, not just npm.
+      process.kill(-child.pid, signal);
+    } else {
+      child.kill(signal);
+    }
+  } catch (error: any) {
+    if (error?.code !== 'ESRCH') throw error;
+  }
+}
+
+async function stopServer(child: ChildProcess | null): Promise<void> {
+  if (!child || child.exitCode !== null || child.signalCode !== null) return;
+  signalServerTree(child, 'SIGTERM');
+  if (await waitForExit(child, 3000)) return;
+  signalServerTree(child, 'SIGKILL');
+  await waitForExit(child, 3000);
 }
 
 function printReport(report: any): boolean {
@@ -283,7 +319,7 @@ async function main() {
     if (!allPassed) process.exitCode = 1;
   } finally {
     await browser.close();
-    stopServer(server);
+    await stopServer(server);
   }
 }
 
